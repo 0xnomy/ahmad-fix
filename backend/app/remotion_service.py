@@ -17,7 +17,7 @@ class RemotionService:
     def __init__(self):
         self.project_path = os.getenv("REMOTION_PROJECT_PATH", "../")
         self.project_path = os.path.abspath(self.project_path)
-        self.public_images_path = os.path.join(self.project_path, "public", "images")
+        self.public_images_path = os.path.join(self.project_path, "generated")
         # Ensure directories exist
         os.makedirs(self.public_images_path, exist_ok=True)
         
@@ -31,7 +31,7 @@ class RemotionService:
             return url
             
     def _copy_images_to_public(self, images: List[GeneratedImage]) -> List[dict]:
-        """Copy generated images to public/images and return proper data structure"""
+        """Copy generated images to generated directory and return proper data structure"""
         copied_images = []
         
         for img in images:
@@ -42,7 +42,7 @@ class RemotionService:
                 # Extract filename from URL
                 filename = self._extract_filename_from_url(img.url)
                 
-                # Check if image exists in public/images/
+                # Check if image exists in generated/
                 image_path = os.path.join(self.public_images_path, filename)
 
                 if os.path.exists(image_path):
@@ -80,7 +80,7 @@ class RemotionService:
             if len(photos_data) < 1:
                 raise Exception(f"No valid images found: {len(photos_data)}. Need at least 1.")
             
-            logger.info(f"[{video_id}] Copied {len(photos_data)} images to public/images/")
+            logger.info(f"[{video_id}] Copied {len(photos_data)} images to generated/")
             
             # Step 2: Handle audio file
             if not audio_file or not os.path.exists(audio_file):
@@ -105,7 +105,7 @@ class RemotionService:
             remotion_props = {
                 "title": title,
                 "name": name,
-                "audioFile": audio_filename,
+                "audioFile": f"public/{audio_filename}",
                 "images": photos_data,  # Changed from "years" to "images"
                 "durationPerImage": duration_per_image,  # Dynamic: seconds per image
                 "transitionDuration": transition_duration,  # Dynamic: transition duration
@@ -130,7 +130,7 @@ class RemotionService:
             
             # Step 5: Generate output video path
             output_filename = f"aging_video_{uuid.uuid4().hex[:8]}.mp4"
-            output_path = os.path.abspath(os.path.join("generated", output_filename))
+            output_path = os.path.abspath(os.path.join(self.project_path, "generated", output_filename))
             
             # Step 6: Build Remotion render command with timeout configurations
             cmd = [

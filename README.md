@@ -6,10 +6,11 @@
 - Frontend UI with image selection and regeneration
 - Backend API with proper logging
 - Image serving and static file handling
-
-**In Progress:**
 - Remotion integration with generated images and audio
 - Video rendering pipeline
+
+**In Progress:**
+- merging frontend and backend into one port 
 
 ## Features
 

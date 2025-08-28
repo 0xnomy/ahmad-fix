@@ -5,7 +5,7 @@ from app.remotion_service import RemotionService
 from app.models import GeneratedImage
 
 async def test_video_generation():
-    """Test video generation using existing images in public/images/"""
+    """Test video generation using existing images in generated/"""
 
     # Initialize the service
     service = RemotionService()
@@ -27,7 +27,7 @@ async def test_video_generation():
     ]
 
     # Test parameters
-    audio_file = "../public/aud_0.mp3"  # Use existing audio file
+    audio_file = "../uploads/aud_0.mp3"  # Use existing audio file
     title = "Test Aging Video with Audio"
     name = "Test Person"
     duration_per_image = 2.0

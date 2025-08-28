@@ -6,14 +6,11 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-class AudioProcessor:
-    """Handles audio file processing and validation"""
-    
+class AudioProcessor:    
     def __init__(self):
         self.supported_formats = ['.mp3', '.wav', '.m4a', '.aac']
     
     def validate_audio(self, file_path: str) -> Dict[str, any]:
-        """Validate audio file and return validation info"""
         try:
             if not os.path.exists(file_path):
                 return {'valid': False, 'error': 'File not found'}
@@ -56,15 +53,17 @@ class AudioProcessor:
             return {'valid': False, 'error': f'Validation error: {str(e)}'}
     
     def convert_to_mp3(self, input_path: str, output_filename: str) -> Optional[str]:
-        """Convert audio file to MP3 format using ffmpeg (if available)"""
         try:
-            # Ensure uploads directory exists
-            os.makedirs("uploads", exist_ok=True)
+            # Ensure uploads directory exists with absolute path
+            backend_dir = Path(__file__).parent.parent.parent
+            uploads_dir = backend_dir / "uploads"
+            uploads_dir.mkdir(exist_ok=True)
             
-            output_path = os.path.join("uploads", output_filename)
+            output_path = uploads_dir / output_filename
             
             # Check if input file exists and is readable
-            if not os.path.exists(input_path):
+            input_file = Path(input_path)
+            if not input_file.exists():
                 logger.error(f"Input file does not exist: {input_path}")
                 return None
                 
@@ -74,11 +73,11 @@ class AudioProcessor:
             
             # Simple conversion using ffmpeg (requires ffmpeg to be installed)
             cmd = [
-                'ffmpeg', '-i', input_path, 
+                'ffmpeg', '-i', str(input_path), 
                 '-codec:a', 'mp3', 
                 '-b:a', '128k',
                 '-y',  # Overwrite output
-                output_path
+                str(output_path)
             ]
             
             logger.info(f"Running ffmpeg command: {' '.join(cmd)}")
@@ -86,8 +85,8 @@ class AudioProcessor:
             
             if result.returncode == 0:
                 logger.info(f"Successfully converted audio to: {output_path}")
-                if os.path.exists(output_path):
-                    return output_path
+                if output_path.exists():
+                    return str(output_path)
                 else:
                     logger.error(f"Conversion succeeded but output file not found: {output_path}")
                     return None
@@ -96,9 +95,9 @@ class AudioProcessor:
                 # If ffmpeg fails, just copy the file
                 import shutil
                 shutil.copy2(input_path, output_path)
-                if os.path.exists(output_path):
+                if output_path.exists():
                     logger.info(f"Copied original file to: {output_path}")
-                    return output_path
+                    return str(output_path)
                 else:
                     logger.error(f"Failed to copy file to: {output_path}")
                     return None
@@ -108,9 +107,11 @@ class AudioProcessor:
             # Try to copy the file instead
             try:
                 import shutil
-                output_path = os.path.join("uploads", output_filename)
+                backend_dir = Path(__file__).parent.parent.parent
+                uploads_dir = backend_dir / "uploads"
+                output_path = uploads_dir / output_filename
                 shutil.copy2(input_path, output_path)
-                return output_path
+                return str(output_path)
             except Exception as e:
                 logger.error(f"File copy after timeout failed: {str(e)}")
                 return None
@@ -119,9 +120,11 @@ class AudioProcessor:
             logger.warning("ffmpeg not found, copying file without conversion")
             try:
                 import shutil
-                output_path = os.path.join("uploads", output_filename)
+                backend_dir = Path(__file__).parent.parent.parent
+                uploads_dir = backend_dir / "uploads"
+                output_path = uploads_dir / output_filename
                 shutil.copy2(input_path, output_path)
-                return output_path
+                return str(output_path)
             except Exception as e:
                 logger.error(f"File copy failed: {str(e)}")
                 return None
@@ -130,9 +133,11 @@ class AudioProcessor:
             # Try to copy the file as a last resort
             try:
                 import shutil
-                output_path = os.path.join("uploads", output_filename)
+                backend_dir = Path(__file__).parent.parent.parent
+                uploads_dir = backend_dir / "uploads"
+                output_path = uploads_dir / output_filename
                 shutil.copy2(input_path, output_path)
-                return output_path
+                return str(output_path)
             except Exception as copy_error:
                 logger.error(f"Final file copy failed: {str(copy_error)}")
                 return None

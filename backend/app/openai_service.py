@@ -247,7 +247,6 @@ class OpenAIService:
         return None
 
     def _extract_start_age(self, prompt: str) -> int:
-        """Extract starting age from prompt text."""
         words = prompt.lower().split()
         for i, word in enumerate(words):
             if word in ["age", "from"] and i + 1 < len(words):
@@ -269,21 +268,20 @@ class OpenAIService:
         return 60
 
     async def _save_base64_image(self, base64_data: str, filename: str) -> str:
-        """Save base64 image data to public directory for frontend access."""
         try:
             image_bytes = base64.b64decode(base64_data)
             
-            # Save to public directory for frontend access
-            public_dir = "../public/images"
-            os.makedirs(public_dir, exist_ok=True)
+            # Save to generated directory for frontend access
+            generated_dir = "../generated"
+            os.makedirs(generated_dir, exist_ok=True)
             
-            file_path = os.path.join(public_dir, filename)
+            file_path = os.path.join(generated_dir, filename)
             with open(file_path, 'wb') as f:
                 f.write(image_bytes)
             
             logger.debug(f"Image saved: {filename}")
             # Return the full path for frontend access through static mount
-            return f"/images/{filename}"
+            return f"/generated/{filename}"
             
         except Exception as e:
             logger.error(f"Error saving image: {str(e)}")

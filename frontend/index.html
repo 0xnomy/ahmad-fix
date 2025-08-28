@@ -187,8 +187,7 @@
                             Background music (optional)
                         </label>
                         <div class="flex items-center space-x-3">
-                            <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a,.aac,audio/*" class="hidden"
-                                onchange="handleAudioUpload(this)">
+                            <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a,.aac,audio/*" class="hidden">
                             <button type="button" onclick="document.getElementById('audioFileInput').click()"
                                 class="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg font-semibold transition-colors text-sm flex items-center">
                                 <i class="fas fa-upload mr-1"></i>Upload Music
@@ -228,470 +227,497 @@
         <!-- Image Review Section -->
         <div id="imageReviewSection" class="hidden">
             <!-- Progress Steps -->
-            <div>
-                <label for="num_images" class="block text-sm font-semibold text-gray-700 mb-2">
-                    <i class="fas fa-hourglass-half mr-2 text-pink-600"></i>
-                    How many life stages do you want?
-                </label>
-                <input type="number" id="num_images" name="num_images" min="2" max="15" value="5"
-                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg font-semibold"
-                    placeholder="Enter number (2-15)">
-                <div class="mt-2 text-xs text-gray-500">
-                    <i class="fas fa-info-circle mr-1 text-blue-500"></i>
-                    We'll automatically create a complete aging journey from young to old
-                </div>
-            </div>
-            <div>
-                <h3 class="text-2xl font-bold flex items-center">
-                    <i class="fas fa-heart mr-3"></i>
-                    Choose Your Favorite Photos
-                </h3>
-                <p class="mt-1 opacity-90">Select the photos you love most for your aging video</p>
-            </div>
-            <div class="text-right">
-                <div class="text-2xl font-bold" id="reviewImageCount">0</div>
-                <div class="text-sm opacity-90">Photos Ready</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
-        <!-- Image Review Grid -->
-        <div id="reviewImagesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <!-- Review images will be inserted here -->
-        </div>
-
-        <!-- Quick Actions -->
-        <div
-            class="flex flex-col md:flex-row items-center justify-between pt-6 border-t border-gray-200 space-y-4 md:space-y-0">
-            <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
-                <button onclick="regenerateAllImages()"
-                    class="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-semibold transition-colors flex items-center shadow-lg">
-                    <i class="fas fa-redo mr-2"></i>
-                    Make New Photos
-                </button>
-                <button onclick="goBackToForm()"
-                    class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-semibold transition-colors flex items-center">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Start Over
-                </button>
-            </div>
-
-            <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
-                <div class="text-center md:text-right">
-                    <div class="text-lg font-bold text-green-600">
-                        <span id="acceptedCount">0</span> favorites selected
+            <div class="mb-8">
+                <div class="flex items-center justify-center space-x-2 md:space-x-4">
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Photos Created</span>
                     </div>
-                    <div class="text-xs text-gray-500">You need at least 1 photo to continue</div>
-                </div>
-                <button onclick="proceedToVideoSetup()" id="proceedBtn"
-                    class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-colors flex items-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fas fa-arrow-right mr-2"></i>
-                    Continue with Favorites
-                </button>
-            </div>
-        </div>
-    </div>
-    </div>
-
-    <!-- Audio Selection Section -->
-    <div id="audioSelectionSection" class="hidden">
-        <!-- Progress Steps -->
-        <div class="mb-8">
-            <div class="flex items-center justify-center space-x-2 md:space-x-4">
-                <div class="flex items-center">
-                    <div
-                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                        <i class="fas fa-check"></i>
+                    <div class="w-8 md:w-12 h-0.5 bg-blue-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-blue-600 hidden md:block">Pick Favorites</span>
                     </div>
-                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Photos Ready</span>
-                </div>
-                <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
-                <div class="flex items-center">
-                    <div
-                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                        <i class="fas fa-check"></i>
+                    <div class="w-8 md:w-12 h-0.5 bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-gray-500 hidden md:block">Add Music</span>
                     </div>
-                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Favorites Chosen</span>
-                </div>
-                <div class="w-8 md:w-12 h-0.5 bg-blue-300"></div>
-                <div class="flex items-center">
-                    <div
-                        class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                        <i class="fas fa-music"></i>
+                    <div class="w-8 md:w-12 h-0.5 bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-gray-500 hidden md:block">Make Video</span>
                     </div>
-                    <span class="ml-2 text-sm font-medium text-blue-600 hidden md:block">Add Music</span>
-                </div>
-                <div class="w-8 md:w-12 h-0.5 bg-gray-300"></div>
-                <div class="flex items-center">
-                    <div
-                        class="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                        <i class="fas fa-video"></i>
-                    </div>
-                    <span class="ml-2 text-sm font-medium text-gray-500 hidden md:block">Make Video</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Audio Header -->
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-2xl shadow-xl p-6 text-white">
-            <div>
-                <h3 class="text-2xl font-bold flex items-center">
-                    <i class="fas fa-music mr-3"></i>
-                    Add Some Music
-                </h3>
-                <p class="mt-1 opacity-90">Choose background music to make your aging video more engaging</p>
+            <!-- Review Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-t-2xl shadow-xl p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold flex items-center">
+                            <i class="fas fa-heart mr-3"></i>
+                            Choose Your Favorite Photos
+                        </h3>
+                        <p class="mt-1 opacity-90">Select the photos you love most for your aging video</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold" id="reviewImageCount">0</div>
+                        <div class="text-sm opacity-90">Photos Ready</div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Audio Content -->
-        <div class="bg-white rounded-b-2xl shadow-xl p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Upload Audio -->
+            <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
+                <!-- Image Review Grid -->
+                <div id="reviewImagesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    <!-- Review images will be inserted here -->
+                </div>
+
+                <!-- Quick Actions -->
                 <div
-                    class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
-                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
-                    <h4 class="text-lg font-semibold mb-2">Upload Your Audio</h4>
-                    <p class="text-gray-600 mb-4">Drag and drop an audio file or click to browse</p>
-                    <input type="file" id="audioFileUpload" accept="audio/*" class="hidden">
-                    <button onclick="document.getElementById('audioFileUpload').click()"
-                        class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors">
-                        <i class="fas fa-upload mr-2"></i>Choose File
-                    </button>
-                    <div id="uploadedAudioInfo" class="mt-4 text-sm text-gray-600 hidden">
-                        <i class="fas fa-music mr-2"></i>
-                        <span id="uploadedFileName"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Audio Actions -->
-            <div class="flex justify-between items-center mt-6 pt-6 border-t">
-                <button onclick="backToImageReview()"
-                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to Images
-                </button>
-
-                <div class="flex items-center space-x-4">
-                    <div class="text-sm text-gray-600">
-                        <span id="selectedAudioName">No audio selected</span>
-                    </div>
-                    <button onclick="proceedToVideoCreation()" id="proceedToVideoBtn"
-                        class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-arrow-right mr-2"></i>Create Video with Audio
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Video Creation Section -->
-    <div id="videoCreationSection" class="hidden">
-        <!-- Progress Steps -->
-        <div class="mb-8">
-            <div class="flex items-center justify-center space-x-2 md:space-x-4">
-                <div class="flex items-center">
-                    <div
-                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Photos Ready</span>
-                </div>
-                <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
-                <div class="flex items-center">
-                    <div
-                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Music Added</span>
-                </div>
-                <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
-                <div class="flex items-center">
-                    <div
-                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                        <i class="fas fa-check"></i>
-                    </div>
-                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">All Ready</span>
-                </div>
-                <div class="w-8 md:w-12 h-0.5 bg-pink-300"></div>
-                <div class="flex items-center">
-                    <div
-                        class="w-8 h-8 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg pulse">
-                        <i class="fas fa-video"></i>
-                    </div>
-                    <span class="ml-2 text-sm font-medium text-pink-600 hidden md:block">Make Video</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Video Creation Header -->
-        <div class="bg-gradient-to-r from-pink-600 to-red-600 rounded-t-2xl shadow-xl p-6 text-white">
-            <div class="text-center">
-                <h3 class="text-3xl font-bold flex items-center justify-center">
-                    <i class="fas fa-video mr-3"></i>
-                    🎬 Let's Make Your Video!
-                </h3>
-                <p class="mt-2 opacity-90 text-lg">Everything is ready - time to create your amazing aging
-                    transformation!</p>
-            </div>
-        </div>
-
-        <!-- Video Creation Content -->
-        <div class="bg-white rounded-b-2xl shadow-xl p-8">
-            <div class="text-center">
-                <!-- Success Indicator -->
-                <div class="mb-8">
-                    <div
-                        class="inline-flex items-center bg-green-100 text-green-800 px-6 py-3 rounded-full text-lg font-semibold mb-6 shadow-lg">
-                        <i class="fas fa-check-circle mr-3 text-xl"></i>
-                        ✅ Everything looks perfect!
-                    </div>
-
-                    <!-- Summary Cards -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200">
-                            <i class="fas fa-images text-4xl text-blue-600 mb-3"></i>
-                            <div class="text-2xl font-bold text-blue-700" id="finalImageCount">0</div>
-                            <div class="text-blue-600 font-medium">Photos Selected</div>
-                        </div>
-                        <div
-                            class="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200">
-                            <i class="fas fa-music text-4xl text-purple-600 mb-3"></i>
-                            <div class="text-2xl font-bold text-purple-700">1</div>
-                            <div class="text-purple-600 font-medium" id="finalAudioName">Music Track</div>
-                        </div>
-                        <div
-                            class="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200">
-                            <i class="fas fa-clock text-4xl text-green-600 mb-3"></i>
-                            <div class="text-2xl font-bold text-green-700" id="estimatedDuration">~30s</div>
-                            <div class="text-green-600 font-medium">Video Length</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="space-y-6">
-                    <div class="max-w-md mx-auto">
-                        <button onclick="generateFinalVideo()" id="generateVideoBtn"
-                            class="w-full bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-8 py-5 rounded-2xl text-xl font-bold transition-all transform hover:scale-105 shadow-xl">
-                            <i class="fas fa-magic mr-3 text-xl"></i>
-                            ✨ Create My Aging Video
+                    class="flex flex-col md:flex-row items-center justify-between pt-6 border-t border-gray-200 space-y-4 md:space-y-0">
+                    <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+                        <button onclick="regenerateAllImages()"
+                            class="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-semibold transition-colors flex items-center shadow-lg">
+                            <i class="fas fa-redo mr-2"></i>
+                            Make New Photos
                         </button>
-                        <div class="mt-2 text-sm text-gray-500">
-                            This might take a few minutes - we're creating something amazing!
-                        </div>
-                    </div>
-
-                    <div class="flex justify-center space-x-4">
-                        <button onclick="backToAudioSelection()"
-                            class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-arrow-left mr-2"></i>Change Music
-                        </button>
-                        <button onclick="startOver()"
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-redo mr-2"></i>Start Over
+                        <button onclick="goBackToForm()"
+                            class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-semibold transition-colors flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Start Over
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Results Section -->
-    <div id="resultsSection" class="hidden">
-        <!-- Stats Header -->
-        <div class="bg-white rounded-t-2xl shadow-xl border-l border-r border-t border-gray-200 p-6">
-            <div class="flex items-center justify-between">
-                <h3 class="text-2xl font-bold text-gray-900 flex items-center">
-                    <i class="fas fa-images mr-3 text-green-600"></i>
-                    Generated Results
-                </h3>
-                <div class="flex items-center space-x-6 text-center">
-                    <div>
-                        <div class="text-2xl font-bold text-green-600" id="generationTime">--</div>
-                        <div class="text-xs text-gray-500">Generation Time</div>
-                    </div>
-                    <div>
-                        <div class="text-2xl font-bold text-blue-600" id="successCount">0</div>
-                        <div class="text-xs text-gray-500">Successful</div>
-                    </div>
-                    <div>
-                        <div class="text-2xl font-bold text-gray-600" id="totalCount">0</div>
-                        <div class="text-xs text-gray-500">Total</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Images Grid -->
-        <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
-            <!-- Instructions -->
-            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <div class="flex items-start">
-                    <i class="fas fa-info-circle text-blue-600 text-lg mr-3 mt-0.5"></i>
-                    <div class="text-blue-800">
-                        <h4 class="font-semibold mb-1">Review Your Generated Images</h4>
-                        <p class="text-sm">Each image shows your character at different ages. You can
-                            <strong>Accept</strong> images you like, <strong>Retry</strong> to regenerate specific
-                            ones, or <strong>Decline</strong> images you don't want to use.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div id="imagesGrid"
-                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                <!-- Generated images will be inserted here -->
-            </div>
-
-            <!-- Actions -->
-            <div class="mt-8 flex justify-center space-x-4">
-                <button id="selectAllBtn"
-                    class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-semibold transition-colors">
-                    <i class="fas fa-check-double mr-2"></i>Select All for TikTok
-                </button>
-                <button id="downloadBtn"
-                    class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
-                    <i class="fas fa-download mr-2"></i>Download Selected
-                </button>
-                <button id="regenerateAllBtn"
-                    class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
-                    <i class="fas fa-redo mr-2"></i>Regenerate All
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Selected Images for Video Section -->
-    <div id="selectedSection" class="hidden">
-        <div class="bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 rounded-t-2xl shadow-xl p-6 text-white">
-            <div class="flex items-center justify-between">
-                <h3 class="text-2xl font-bold flex items-center">
-                    <i class="fab fa-tiktok mr-3 text-3xl"></i>
-                    Ready for TikTok Video
-                </h3>
-                <div class="text-right">
-                    <div class="text-lg font-bold" id="selectedCount">0</div>
-                    <div class="text-sm opacity-90">Images Selected</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
-            <!-- Selected Images Preview -->
-            <div id="selectedImagesPreview" class="flex space-x-4 mb-6 overflow-x-auto pb-2">
-                <!-- Selected images preview will be inserted here -->
-            </div>
-
-            <!-- Audio Upload Section -->
-            <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
-                <div class="flex items-start">
-                    <i class="fas fa-music text-purple-600 text-lg mr-3 mt-0.5"></i>
-                    <div class="flex-1">
-                        <h4 class="font-semibold mb-2 text-purple-800">Add Background Music (Required)</h4>
-                        <p class="text-sm text-purple-700 mb-4">Upload your MP3 audio file for the video. Supported
-                            formats: MP3, WAV, M4A (Max 10MB)</p>
-
-                        <!-- Audio Upload Input -->
-                        <div class="flex items-center space-x-4">
-                            <div class="flex-1">
-                                <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a" class="hidden"
-                                    onchange="handleAudioUpload(this)">
-                                <button type="button" onclick="document.getElementById('audioFileInput').click()"
-                                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center">
-                                    <i class="fas fa-upload mr-2"></i>Choose Audio File
-                                </button>
+                    <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+                        <div class="text-center md:text-right">
+                            <div class="text-lg font-bold text-green-600">
+                                <span id="acceptedCount">0</span> favorites selected
                             </div>
+                            <div class="text-xs text-gray-500">You need at least 1 photo to continue</div>
+                        </div>
+                        <button onclick="proceedToVideoSetup()" id="proceedBtn"
+                            class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-colors flex items-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-arrow-right mr-2"></i>
+                            Continue with Favorites
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                            <!-- Audio Preview -->
-                            <div id="audioPreview" class="hidden flex items-center space-x-3">
-                                <div class="flex items-center space-x-2">
-                                    <i class="fas fa-file-audio text-purple-600"></i>
-                                    <span id="audioFileName" class="text-sm text-gray-700"></span>
-                                    <span id="audioFileSize" class="text-xs text-gray-500"></span>
+        <!-- Audio Selection Section -->
+        <div id="audioSelectionSection" class="hidden">
+            <!-- Progress Steps -->
+            <div class="mb-8">
+                <div class="flex items-center justify-center space-x-2 md:space-x-4">
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Photos Ready</span>
+                    </div>
+                    <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Favorites Chosen</span>
+                    </div>
+                    <div class="w-8 md:w-12 h-0.5 bg-blue-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                            <i class="fas fa-music"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-blue-600 hidden md:block">Add Music</span>
+                    </div>
+                    <div class="w-8 md:w-12 h-0.5 bg-gray-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-gray-500 hidden md:block">Make Video</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-2xl shadow-xl p-6 text-white">
+                <div>
+                    <h3 class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-music mr-3"></i>
+                        Add Some Music
+                    </h3>
+                    <p class="mt-1 opacity-90">Choose background music to make your aging video more engaging</p>
+                </div>
+            </div>
+
+            <!-- Audio Content -->
+            <div class="bg-white rounded-b-2xl shadow-xl p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Upload Audio -->
+                    <div
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <h4 class="text-lg font-semibold mb-2">Upload Your Audio</h4>
+                        <p class="text-gray-600 mb-4">Drag and drop an audio file or click to browse</p>
+                        <input type="file" id="audioFileUpload" accept="audio/*" class="hidden">
+                        <button onclick="document.getElementById('audioFileUpload').click()"
+                            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-upload mr-2"></i>Choose File
+                        </button>
+                        <div id="uploadedAudioInfo" class="mt-4 text-sm text-gray-600 hidden">
+                            <i class="fas fa-music mr-2"></i>
+                            <span id="uploadedFileName"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Actions -->
+                <div class="flex justify-between items-center mt-6 pt-6 border-t">
+                    <button onclick="backToImageReview()"
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Images
+                    </button>
+
+                    <div class="flex items-center space-x-4">
+                        <div class="text-sm text-gray-600">
+                            <span id="selectedAudioName">No audio selected</span>
+                        </div>
+                        <button onclick="proceedToVideoCreation()" id="proceedToVideoBtn"
+                            class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-arrow-right mr-2"></i>Create Video with Audio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Creation Section -->
+        <div id="videoCreationSection" class="hidden">
+            <!-- Progress Steps -->
+            <div class="mb-8">
+                <div class="flex items-center justify-center space-x-2 md:space-x-4">
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Photos Ready</span>
+                    </div>
+                    <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Music Added</span>
+                    </div>
+                    <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">All Ready</span>
+                    </div>
+                    <div class="w-8 md:w-12 h-0.5 bg-pink-300"></div>
+                    <div class="flex items-center">
+                        <div
+                            class="w-8 h-8 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg pulse">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <span class="ml-2 text-sm font-medium text-pink-600 hidden md:block">Make Video</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Creation Header -->
+            <div class="bg-gradient-to-r from-pink-600 to-red-600 rounded-t-2xl shadow-xl p-6 text-white">
+                <div class="text-center">
+                    <h3 class="text-3xl font-bold flex items-center justify-center">
+                        <i class="fas fa-video mr-3"></i>
+                        🎬 Let's Make Your Video!
+                    </h3>
+                    <p class="mt-2 opacity-90 text-lg">Everything is ready - time to create your amazing aging
+                        transformation!</p>
+                </div>
+            </div>
+
+            <!-- Video Creation Content -->
+            <div class="bg-white rounded-b-2xl shadow-xl p-8">
+                <div class="text-center">
+                    <!-- Success Indicator -->
+                    <div class="mb-8">
+                        <div
+                            class="inline-flex items-center bg-green-100 text-green-800 px-6 py-3 rounded-full text-lg font-semibold mb-6 shadow-lg">
+                            <i class="fas fa-check-circle mr-3 text-xl"></i>
+                            ✅ Everything looks perfect!
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div
+                                class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200">
+                                <i class="fas fa-images text-4xl text-blue-600 mb-3"></i>
+                                <div class="text-2xl font-bold text-blue-700" id="finalImageCount">0</div>
+                                <div class="text-blue-600 font-medium">Photos Selected</div>
+                            </div>
+                            <div
+                                class="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200">
+                                <i class="fas fa-music text-4xl text-purple-600 mb-3"></i>
+                                <div class="text-2xl font-bold text-purple-700">1</div>
+                                <div class="text-purple-600 font-medium" id="finalAudioName">Music Track</div>
+                            </div>
+                            <div
+                                class="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200">
+                                <i class="fas fa-clock text-4xl text-green-600 mb-3"></i>
+                                <div class="text-2xl font-bold text-green-700" id="estimatedDuration">~30s</div>
+                                <div class="text-green-600 font-medium">Video Length</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-6">
+                        <div class="max-w-md mx-auto">
+                            <button onclick="generateFinalVideo()" id="generateVideoBtn"
+                                class="w-full bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-8 py-5 rounded-2xl text-xl font-bold transition-all transform hover:scale-105 shadow-xl">
+                                <i class="fas fa-magic mr-3 text-xl"></i>
+                                ✨ Create My Aging Video
+                            </button>
+                            <div class="mt-2 text-sm text-gray-500">
+                                This might take a few minutes - we're creating something amazing!
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center space-x-4">
+                            <button onclick="backToAudioSelection()"
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors">
+                                <i class="fas fa-arrow-left mr-2"></i>Change Music
+                            </button>
+                            <button onclick="startOver()"
+                                class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-colors">
+                                <i class="fas fa-redo mr-2"></i>Start Over
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden">
+            <!-- Stats Header -->
+            <div class="bg-white rounded-t-2xl shadow-xl border-l border-r border-t border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-images mr-3 text-green-600"></i>
+                        Generated Results
+                    </h3>
+                    <div class="flex items-center space-x-6 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-green-600" id="generationTime">--</div>
+                            <div class="text-xs text-gray-500">Generation Time</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-blue-600" id="successCount">0</div>
+                            <div class="text-xs text-gray-500">Successful</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-gray-600" id="totalCount">0</div>
+                            <div class="text-xs text-gray-500">Total</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Images Grid -->
+            <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
+                <!-- Instructions -->
+                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle text-blue-600 text-lg mr-3 mt-0.5"></i>
+                        <div class="text-blue-800">
+                            <h4 class="font-semibold mb-1">Review Your Generated Images</h4>
+                            <p class="text-sm">Each image shows your character at different ages. You can
+                                <strong>Accept</strong> images you like, <strong>Retry</strong> to regenerate specific
+                                ones, or <strong>Decline</strong> images you don't want to use.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="imagesGrid"
+                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    <!-- Generated images will be inserted here -->
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-8 flex justify-center space-x-4">
+                    <button id="selectAllBtn"
+                        class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-semibold transition-colors">
+                        <i class="fas fa-check-double mr-2"></i>Select All for TikTok
+                    </button>
+                    <button id="downloadBtn"
+                        class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
+                        <i class="fas fa-download mr-2"></i>Download Selected
+                    </button>
+                    <button id="regenerateAllBtn"
+                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
+                        <i class="fas fa-redo mr-2"></i>Regenerate All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selected Images for Video Section -->
+        <div id="selectedSection" class="hidden">
+            <div
+                class="bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 rounded-t-2xl shadow-xl p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-2xl font-bold flex items-center">
+                        <i class="fab fa-tiktok mr-3 text-3xl"></i>
+                        Ready for TikTok Video
+                    </h3>
+                    <div class="text-right">
+                        <div class="text-lg font-bold" id="selectedCount">0</div>
+                        <div class="text-sm opacity-90">Images Selected</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
+                <!-- Selected Images Preview -->
+                <div id="selectedImagesPreview" class="flex space-x-4 mb-6 overflow-x-auto pb-2">
+                    <!-- Selected images preview will be inserted here -->
+                </div>
+
+                <!-- Audio Upload Section -->
+                <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                    <div class="flex items-start">
+                        <i class="fas fa-music text-purple-600 text-lg mr-3 mt-0.5"></i>
+                        <div class="flex-1">
+                            <h4 class="font-semibold mb-2 text-purple-800">Add Background Music (Required)</h4>
+                            <p class="text-sm text-purple-700 mb-4">Upload your MP3 audio file for the video. Supported
+                                formats: MP3, WAV, M4A (Max 10MB)</p>
+
+                            <!-- Audio Upload Input -->
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-1">
+                                    <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a,.aac,audio/*" class="hidden">
+                                    <button type="button" onclick="document.getElementById('audioFileInput').click()"
+                                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center">
+                                        <i class="fas fa-upload mr-2"></i>Choose Audio File
+                                    </button>
                                 </div>
-                                <button type="button" onclick="removeAudio()"
-                                    class="text-red-500 hover:text-red-700 transition-colors">
-                                    <i class="fas fa-times"></i>
-                                </button>
+
+                                <!-- Audio Preview -->
+                                <div id="audioPreview" class="hidden flex items-center space-x-3">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas fa-file-audio text-purple-600"></i>
+                                        <span id="audioFileName" class="text-sm text-gray-700"></span>
+                                        <span id="audioFileSize" class="text-xs text-gray-500"></span>
+                                    </div>
+                                    <button type="button" onclick="removeAudio()"
+                                        class="text-red-500 hover:text-red-700 transition-colors">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Audio Player (for preview) -->
+                            <div id="audioPlayerContainer" class="hidden mt-3">
+                                <audio id="audioPlayer" controls class="w-full max-w-md">
+                                    <source id="audioSource" src="" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            </div>
+
+                            <!-- Audio Status -->
+                            <div id="audioStatus" class="mt-2 text-sm">
+                                <span class="text-green-600">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Using default TikTok background music
+                                </span>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Audio Player (for preview) -->
-                        <div id="audioPlayerContainer" class="hidden mt-3">
-                            <audio id="audioPlayer" controls class="w-full max-w-md">
-                                <source id="audioSource" src="" type="audio/mpeg">
-                                Your browser does not support the audio element.
-                            </audio>
-                        </div>
+                <!-- Video Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label for="videoTitle" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-heading mr-2 text-pink-600"></i>Video Title
+                        </label>
+                        <input type="text" id="videoTitle"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                            placeholder="My Amazing Aging Journey" value="TikTok Aging Challenge">
+                    </div>
+                    <div>
+                        <label for="characterName" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-user mr-2 text-pink-600"></i>Character Name
+                        </label>
+                        <input type="text" id="characterName"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                            placeholder="Enter character name" value="AI Character">
+                    </div>
+                    <div class="flex items-end">
+                        <button id="createVideoBtn" disabled
+                            class="w-full tiktok-gradient text-white font-bold py-3 px-6 rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105 shadow-lg pulse disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                            <i class="fas fa-video mr-2"></i>Create TikTok Video
+                        </button>
+                    </div>
+                </div>
 
-                        <!-- Audio Status -->
-                        <div id="audioStatus" class="mt-2 text-sm">
-                            <span class="text-green-600">
-                                <i class="fas fa-check-circle mr-1"></i>
-                                Using default TikTok background music
-                            </span>
+                <div class="text-center text-sm text-gray-500">
+                    <i class="fas fa-magic mr-1"></i>
+                    Your selected images and audio will be combined into a smooth aging progression video perfect for
+                    TikTok!
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="hidden">
+            <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl mr-4 mt-1"></i>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-red-800">Generation Failed</h3>
+                        <p id="errorMessage" class="text-red-700 mt-2">An error occurred during generation.</p>
+                        <div class="mt-4 flex space-x-3">
+                            <button id="retryBtn"
+                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-retry mr-1"></i>Try Again
+                            </button>
+                            <button id="dismissError"
+                                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium transition-colors">
+                                Dismiss
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Video Settings -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                    <label for="videoTitle" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-heading mr-2 text-pink-600"></i>Video Title
-                    </label>
-                    <input type="text" id="videoTitle"
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                        placeholder="My Amazing Aging Journey" value="TikTok Aging Challenge">
-                </div>
-                <div>
-                    <label for="characterName" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-user mr-2 text-pink-600"></i>Character Name
-                    </label>
-                    <input type="text" id="characterName"
-                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                        placeholder="Enter character name" value="AI Character">
-                </div>
-                <div class="flex items-end">
-                    <button id="createVideoBtn" disabled
-                        class="w-full tiktok-gradient text-white font-bold py-3 px-6 rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105 shadow-lg pulse disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                        <i class="fas fa-video mr-2"></i>Create TikTok Video
-                    </button>
-                </div>
-            </div>
-
-            <div class="text-center text-sm text-gray-500">
-                <i class="fas fa-magic mr-1"></i>
-                Your selected images and audio will be combined into a smooth aging progression video perfect for
-                TikTok!
-            </div>
         </div>
-    </div>
-
-    <!-- Error Section -->
-    <div id="errorSection" class="hidden">
-        <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
-            <div class="flex items-start">
-                <i class="fas fa-exclamation-triangle text-red-600 text-2xl mr-4 mt-1"></i>
-                <div class="flex-1">
-                    <h3 class="text-lg font-bold text-red-800">Generation Failed</h3>
-                    <p id="errorMessage" class="text-red-700 mt-2">An error occurred during generation.</p>
-                    <div class="mt-4 flex space-x-3">
-                        <button id="retryBtn"
-                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
-                            <i class="fas fa-retry mr-1"></i>Try Again
-                        </button>
-                        <button id="dismissError"
-                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium transition-colors">
-                            Dismiss
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     </div>
 
     <script>
@@ -746,17 +772,8 @@
         };
 
         // Initialize
-
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Frontend loaded, API URL:', API_BASE_URL);
-
-            // Attach audio upload handler for audio selection section
-            const audioFileUpload = document.getElementById('audioFileUpload');
-            if (audioFileUpload) {
-                audioFileUpload.addEventListener('change', function () {
-                    handleAudioUpload(this);
-                });
-            }
         });
 
         // Form submission
@@ -804,9 +821,9 @@
 
                 // Check if there's a custom audio file uploaded
                 const audioInput = document.getElementById('audioFileInput');
-                if (audioInput && audioInput.files.length > 0) {
-                    formData.append('audio_file', audioInput.files[0]);
-                    console.log('Adding custom audio to complete pipeline:', audioInput.files[0].name);
+                if (selectedAudio && selectedAudio.file) {
+                    formData.append('audio_file', selectedAudio.file);
+                    console.log('Adding custom audio to complete pipeline:', selectedAudio.name);
                 } else {
                     // Add dummy file to indicate no custom audio
                     const dummyFile = new File([''], 'dummy.mp3', { type: 'audio/mpeg' });
@@ -1058,53 +1075,100 @@ Your video is ready for download!
                 console.log('Create Video button initialized as enabled (audio optional)');
             }
 
-            // Handle audio file upload for both main and audio selection sections
+            // Helper function to update all audio preview sections
+            function updateAudioPreviews(fileName) {
+                // Main form preview
+                const mainPreview = document.getElementById('mainAudioPreview');
+                const mainFileName = document.getElementById('mainAudioFileName');
+                if (mainPreview && mainFileName) {
+                    mainFileName.textContent = fileName;
+                    mainPreview.classList.remove('hidden');
+                    console.log('Main preview updated');
+                }
+
+                // Audio selection section preview
+                const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
+                const uploadedFileName = document.getElementById('uploadedFileName');
+                if (uploadedAudioInfo && uploadedFileName) {
+                    uploadedFileName.textContent = fileName;
+                    uploadedAudioInfo.classList.remove('hidden');
+                    console.log('Audio selection preview updated');
+                }
+
+                // Selected audio name display
+                const selectedAudioName = document.getElementById('selectedAudioName');
+                if (selectedAudioName) {
+                    selectedAudioName.textContent = fileName;
+                    console.log('Selected audio name updated');
+                }
+            }
+
+            // Helper function to update audio-dependent buttons
+            function updateAudioButtons(hasAudio) {
+                const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
+                if (proceedToVideoBtn) {
+                    proceedToVideoBtn.disabled = !hasAudio;
+                    if (hasAudio) {
+                        proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Create Video with Audio';
+                    } else {
+                        proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Upload Audio Required';
+                    }
+                    console.log('Proceed to Video button updated:', hasAudio ? 'enabled' : 'disabled');
+                }
+
+                const createVideoBtn = document.getElementById('createVideoBtn');
+                if (createVideoBtn) {
+                    createVideoBtn.disabled = !hasAudio;
+                    console.log('Create Video button updated:', hasAudio ? 'enabled' : 'disabled');
+                }
+            }
             function handleAudioFileInput(input) {
                 console.log('Audio input change detected:', input.id);
                 const file = input.files[0];
                 console.log('Selected file:', file);
 
                 if (file) {
+                    console.log('Selected file:', file.name, 'Type:', file.type, 'Size:', file.size, 'Size in MB:', (file.size / 1024 / 1024).toFixed(2));
+
+                    // Validate file type - be more permissive with MP3 files
+                    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-m4a', 'audio/mp4'];
+                    const allowedExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.MP3', '.WAV', '.M4A', '.AAC'];
+
+                    // Extract file extension safely
+                    const lastDotIndex = file.name.lastIndexOf('.');
+                    const fileExt = lastDotIndex !== -1 ? file.name.toLowerCase().substring(lastDotIndex) : '';
+
+                    console.log('File validation - Type:', file.type, 'Extension:', fileExt);
+
+                    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExt)) {
+                        console.error('File validation failed - Type:', file.type, 'Extension:', fileExt);
+                        alert('Please select a valid audio file (MP3, WAV, M4A, AAC)');
+                        input.value = '';
+                        return;
+                    }
+
+                    // Validate file size (10MB max)
+                    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                    if (file.size > maxSize) {
+                        alert('Audio file is too large. Please choose a file smaller than 10MB.');
+                        input.value = '';
+                        return;
+                    }
+
+                    // Set global variables consistently
                     selectedAudio = { file: file, name: file.name };
-                    console.log('selectedAudio set to:', selectedAudio);
+                    uploadedAudioFile = file; // Also set this global variable for consistency
+                    console.log('Global variables set - selectedAudio:', selectedAudio, 'uploadedAudioFile:', uploadedAudioFile);
 
-                    // Main form preview
-                    const mainPreview = document.getElementById('mainAudioPreview');
-                    const mainFileName = document.getElementById('mainAudioFileName');
-                    if (mainPreview && mainFileName) {
-                        mainFileName.textContent = file.name;
-                        mainPreview.classList.remove('hidden');
-                        console.log('Main preview updated');
-                    }
+                    // Update all preview sections
+                    updateAudioPreviews(file.name);
 
-                    // Audio selection section preview
-                    const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
-                    const uploadedFileName = document.getElementById('uploadedFileName');
-                    if (uploadedAudioInfo && uploadedFileName) {
-                        uploadedFileName.textContent = file.name;
-                        uploadedAudioInfo.classList.remove('hidden');
-                        console.log('Audio selection preview updated');
-                    }
+                    // Enable buttons that require audio
+                    updateAudioButtons(true);
 
-                    const selectedAudioName = document.getElementById('selectedAudioName');
-                    if (selectedAudioName) {
-                        selectedAudioName.textContent = file.name;
-                        console.log('Selected audio name updated');
-                    }
-
-                    const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
-                    if (proceedToVideoBtn) {
-                        proceedToVideoBtn.disabled = false;
-                        proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Create Video with Audio';
-                        console.log('Create Video button enabled with audio');
-                    }
-
-                    // Also enable the createVideoBtn in the selected section
-                    const createVideoBtn = document.getElementById('createVideoBtn');
-                    if (createVideoBtn) {
-                        createVideoBtn.disabled = false;
-                        console.log('Create TikTok Video button enabled');
-                    }
+                    // Show audio preview with player
+                    displayAudioPreview(file);
+                    console.log('Audio upload completed successfully');
                 } else {
                     console.log('No file selected');
                 }
@@ -1450,6 +1514,7 @@ Your video is ready for download!
             document.getElementById('uploadedAudioInfo').classList.add('hidden');
             document.getElementById('audioFileUpload').value = '';
             selectedAudio = null;
+            uploadedAudioFile = null; // Also clear this global variable
             document.getElementById('selectedAudioName').textContent = 'No music selected yet';
             const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
             if (proceedToVideoBtn) {
@@ -1904,94 +1969,9 @@ Your video is ready for download!
         // Audio Upload Functions
         let uploadedAudioFile = null;
 
-        function handleAudioUpload(input) {
-            console.log('handleAudioUpload called with input:', input);
-            console.log('Input files:', input.files);
-
-            // Reset input to ensure onchange fires for same file
-            const currentValue = input.value;
-            input.value = '';
-            input.value = currentValue;
-
-            const file = input.files[0];
-            if (!file) {
-                console.log('No file selected');
-                return;
-            }
-
-            console.log('Selected file:', file.name, 'Type:', file.type, 'Size:', file.size);
-
-            // Validate file type - be more permissive with MP3 files
-            const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-m4a', 'audio/mp4'];
-            const allowedExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.MP3', '.WAV', '.M4A', '.AAC'];
-
-            // Extract file extension safely
-            const lastDotIndex = file.name.lastIndexOf('.');
-            const fileExt = lastDotIndex !== -1 ? file.name.toLowerCase().substring(lastDotIndex) : '';
-
-            console.log('File validation - Type:', file.type, 'Extension:', fileExt);
-
-            if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExt)) {
-                console.error('File validation failed - Type:', file.type, 'Extension:', fileExt);
-                alert('Please select a valid audio file (MP3, WAV, M4A, AAC)');
-                input.value = '';
-                return;
-            }
-
-            // Validate file size (10MB max)
-            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-            if (file.size > maxSize) {
-                alert('Audio file is too large. Please choose a file smaller than 10MB.');
-                input.value = '';
-                return;
-            }
-
-            uploadedAudioFile = file;
-            selectedAudio = { file: file, name: file.name }; // Set global selectedAudio
-
-            console.log('Audio uploaded:', selectedAudio);
-
-            // Show preview in main form if input is mainAudioFileInput
-            if (input.id === 'audioFileInput') {
-                const mainPreview = document.getElementById('mainAudioPreview');
-                const mainFileName = document.getElementById('mainAudioFileName');
-                if (mainPreview && mainFileName) {
-                    mainFileName.textContent = file.name;
-                    mainPreview.classList.remove('hidden');
-                    console.log('Main audio preview shown successfully for file:', file.name);
-                }
-            }
-
-            // Show preview in audio selection section if input is audioFileUpload
-            if (input.id === 'audioFileUpload') {
-                // Show uploaded file name
-                const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
-                const uploadedFileName = document.getElementById('uploadedFileName');
-                if (uploadedAudioInfo && uploadedFileName) {
-                    uploadedFileName.textContent = file.name;
-                    uploadedAudioInfo.classList.remove('hidden');
-                }
-            }
-
-            // Update selectedAudioName display
-            const selectedAudioName = document.getElementById('selectedAudioName');
-            if (selectedAudioName) {
-                selectedAudioName.textContent = file.name;
-            }
-
-            // Enable proceedToVideoBtn
-            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
-            if (proceedToVideoBtn) {
-                proceedToVideoBtn.disabled = false;
-                proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Create Video with Audio';
-            }
-
-            // Always show preview in audio selection section
-            displayAudioPreview(file);
-
-            console.log('Audio upload completed successfully');
-        }
         function displayAudioPreview(file) {
+            console.log('displayAudioPreview called with file:', file.name, 'Type:', file.type, 'Size:', file.size);
+
             const preview = document.getElementById('audioPreview');
             const fileName = document.getElementById('audioFileName');
             const fileSize = document.getElementById('audioFileSize');
@@ -2000,12 +1980,23 @@ Your video is ready for download!
             const audioPlayer = document.getElementById('audioPlayer');
             const audioSource = document.getElementById('audioSource');
 
+            console.log('Audio preview elements found:', {
+                preview: !!preview,
+                fileName: !!fileName,
+                fileSize: !!fileSize,
+                status: !!status,
+                playerContainer: !!playerContainer,
+                audioPlayer: !!audioPlayer,
+                audioSource: !!audioSource
+            });
+
             // Update file info
             fileName.textContent = file.name;
             fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
 
             // Show preview
             preview.classList.remove('hidden');
+            console.log('Audio preview shown, file info updated');
 
             // Update status
             status.innerHTML = `
@@ -2014,59 +2005,96 @@ Your video is ready for download!
                     Custom audio file selected: ${file.name}
                 </span>
             `;
+            console.log('Audio status updated');
+
+            // Clean up any existing blob URL
+            if (audioSource.src && audioSource.src.startsWith('blob:')) {
+                URL.revokeObjectURL(audioSource.src);
+                console.log('Cleaned up existing blob URL');
+            }
 
             // Setup audio player
             const audioURL = URL.createObjectURL(file);
+            console.log('Created blob URL for audio file:', audioURL);
+
+            // Set the correct MIME type based on file extension
+            const fileExt = file.name.toLowerCase().split('.').pop();
+            let mimeType = 'audio/mpeg'; // default
+
+            if (fileExt === 'wav') {
+                mimeType = 'audio/wav';
+            } else if (fileExt === 'm4a') {
+                mimeType = 'audio/mp4';
+            } else if (fileExt === 'aac') {
+                mimeType = 'audio/aac';
+            } else if (fileExt === 'ogg') {
+                mimeType = 'audio/ogg';
+            }
+
+            console.log('Setting audio source with MIME type:', mimeType);
             audioSource.src = audioURL;
+            audioSource.type = mimeType;
             audioPlayer.load();
             playerContainer.classList.remove('hidden');
+            console.log('Audio player setup complete, player should be visible now');
+
+            // Add error handling for audio loading
+            audioPlayer.addEventListener('error', function (e) {
+                console.error('Audio player error:', e);
+                status.innerHTML = `
+                    <span class="text-red-600">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Error loading audio file. Please try a different format.
+                    </span>
+                `;
+            });
+
+            // Add success handler
+            audioPlayer.addEventListener('loadeddata', function () {
+                console.log('Audio file loaded successfully');
+                status.innerHTML = `
+                    <span class="text-green-600">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Audio file loaded successfully
+                    </span>
+                `;
+            });
         }
 
         function removeAudio() {
-            uploadedAudioFile = null;
-            selectedAudio = null; // Clear global selectedAudio
-
-            const preview = document.getElementById('audioPreview');
-            const status = document.getElementById('audioStatus');
-            const playerContainer = document.getElementById('audioPlayerContainer');
-            const audioInput = document.getElementById('audioFileInput');
-
-            preview.classList.add('hidden');
-            playerContainer.classList.add('hidden');
-            audioInput.value = '';
-
-            // Update selectedAudioName display
-            const selectedAudioName = document.getElementById('selectedAudioName');
-            if (selectedAudioName) {
-                selectedAudioName.textContent = 'No audio selected';
-            }
-
-            // Update proceedToVideoBtn
-            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
-            if (proceedToVideoBtn) {
-                proceedToVideoBtn.disabled = true;
-                proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Upload Audio Required';
-            }
-
-            // Reset status
-            status.innerHTML = `
-                <span class="text-orange-600">
-                    <i class="fas fa-exclamation-triangle mr-1"></i>
-                    Please upload an audio file to continue
-                </span>
-            `;
-        }
-
-        function removeMainAudio() {
-            const audioInput = document.getElementById('audioFileInput');
-            const preview = document.getElementById('mainAudioPreview');
-
-            audioInput.value = '';
-            preview.classList.add('hidden');
+            console.log('Removing audio from audio selection section...');
 
             // Clear global variables
             uploadedAudioFile = null;
             selectedAudio = null;
+            console.log('Global variables cleared');
+
+            // Clear input values
+            const audioInput = document.getElementById('audioFileInput');
+            if (audioInput) {
+                audioInput.value = '';
+            }
+
+            const audioFileUpload = document.getElementById('audioFileUpload');
+            if (audioFileUpload) {
+                audioFileUpload.value = '';
+            }
+
+            // Hide all preview sections
+            const preview = document.getElementById('audioPreview');
+            if (preview) {
+                preview.classList.add('hidden');
+            }
+
+            const mainPreview = document.getElementById('mainAudioPreview');
+            if (mainPreview) {
+                mainPreview.classList.add('hidden');
+            }
+
+            const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
+            if (uploadedAudioInfo) {
+                uploadedAudioInfo.classList.add('hidden');
+            }
 
             // Update selectedAudioName display
             const selectedAudioName = document.getElementById('selectedAudioName');
@@ -2074,12 +2102,108 @@ Your video is ready for download!
                 selectedAudioName.textContent = 'No audio selected';
             }
 
-            // Reset proceedToVideoBtn
-            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
-            if (proceedToVideoBtn) {
-                proceedToVideoBtn.disabled = true;
-                proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Proceed to Video';
+            // Update buttons
+            updateAudioButtons(false);
+
+            // Clean up audio player
+            const playerContainer = document.getElementById('audioPlayerContainer');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioSource = document.getElementById('audioSource');
+
+            if (audioSource && audioSource.src && audioSource.src.startsWith('blob:')) {
+                URL.revokeObjectURL(audioSource.src);
+                audioSource.src = '';
+                if (audioPlayer) {
+                    audioPlayer.load();
+                }
             }
+
+            if (playerContainer) {
+                playerContainer.classList.add('hidden');
+            }
+
+            // Reset status
+            const status = document.getElementById('audioStatus');
+            if (status) {
+                status.innerHTML = `
+                    <span class="text-orange-600">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Please upload an audio file to continue
+                    </span>
+                `;
+            }
+
+            console.log('Audio removal completed');
+        }
+
+        function removeMainAudio() {
+            console.log('Removing main audio...');
+
+            // Clear global variables
+            uploadedAudioFile = null;
+            selectedAudio = null;
+            console.log('Global variables cleared');
+
+            // Clear input values
+            const audioInput = document.getElementById('audioFileInput');
+            if (audioInput) {
+                audioInput.value = '';
+            }
+
+            const audioFileUpload = document.getElementById('audioFileUpload');
+            if (audioFileUpload) {
+                audioFileUpload.value = '';
+            }
+
+            // Hide all preview sections
+            const mainPreview = document.getElementById('mainAudioPreview');
+            if (mainPreview) {
+                mainPreview.classList.add('hidden');
+            }
+
+            const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
+            if (uploadedAudioInfo) {
+                uploadedAudioInfo.classList.add('hidden');
+            }
+
+            // Update selectedAudioName display
+            const selectedAudioName = document.getElementById('selectedAudioName');
+            if (selectedAudioName) {
+                selectedAudioName.textContent = 'No audio selected';
+            }
+
+            // Update buttons
+            updateAudioButtons(false);
+
+            // Clean up audio player
+            const audioPlayerContainer = document.getElementById('audioPlayerContainer');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioSource = document.getElementById('audioSource');
+
+            if (audioSource && audioSource.src && audioSource.src.startsWith('blob:')) {
+                URL.revokeObjectURL(audioSource.src);
+                audioSource.src = '';
+                if (audioPlayer) {
+                    audioPlayer.load();
+                }
+            }
+
+            if (audioPlayerContainer) {
+                audioPlayerContainer.classList.add('hidden');
+            }
+
+            // Update audio status
+            const audioStatus = document.getElementById('audioStatus');
+            if (audioStatus) {
+                audioStatus.innerHTML = `
+                    <span class="text-orange-600">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Please upload an audio file to continue
+                    </span>
+                `;
+            }
+
+            console.log('Main audio removal completed');
         }
 
         // Update Selected Section
@@ -2175,9 +2299,9 @@ Your video is ready for download!
                 formData.append('name', name);
 
                 // Add audio file (required)
-                if (uploadedAudioFile) {
-                    formData.append('audio_file', uploadedAudioFile);
-                    console.log('Adding custom audio:', uploadedAudioFile.name);
+                if (selectedAudio && selectedAudio.file) {
+                    formData.append('audio_file', selectedAudio.file);
+                    console.log('Adding custom audio:', selectedAudio.name);
                 } else {
                     alert('Please upload an audio file before creating the video.');
                     createBtn.disabled = false;

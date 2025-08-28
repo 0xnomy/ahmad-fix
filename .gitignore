@@ -24,3 +24,4 @@ uploads/
 images/
 *.mp3
 generated/
+test_video_generation.py

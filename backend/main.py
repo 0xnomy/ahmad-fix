@@ -11,6 +11,7 @@ import uuid
 import logging
 from datetime import datetime
 from typing import Optional
+from pathlib import Path
 import json
 import re
 from dotenv import load_dotenv
@@ -23,21 +24,23 @@ from app.audio_processor import AudioProcessor
 # Load environment variables
 load_dotenv()
 
+# Ensure logs directory exists BEFORE configuring logging
+logs_dir = os.path.join(os.path.dirname(__file__), 'logs')
+os.makedirs(logs_dir, exist_ok=True)
+
 # Configure logging with UTF-8 encoding support
+log_file_path = os.path.join(logs_dir, 'tiktok_aging_app.log')
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/tiktok_aging_app.log', encoding='utf-8'),
+        logging.FileHandler(log_file_path, encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
 
 # Create logger
 logger = logging.getLogger(__name__)
-
-# Ensure logs directory exists
-os.makedirs('logs', exist_ok=True)
 
 app = FastAPI(
     title="TikTok Aging App API", 
@@ -95,8 +98,9 @@ app.add_middleware(
 )
 
 # Mount static files for generated videos and images
-app.mount("/generated", StaticFiles(directory="generated"), name="generated")
-app.mount("/images", StaticFiles(directory="../public/images"), name="images")
+app.mount("/generated", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../generated")), name="generated")
+app.mount("/images", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../generated")), name="images")
+app.mount("/uploads", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../uploads")), name="uploads")
 
 # Initialize services
 openai_service = OpenAIService()
@@ -161,8 +165,8 @@ async def dynamic_aging_video(
         if audio_file and audio_file.filename != 'dummy.mp3' and audio_file.size > 0:
             timestamp = int(time.time())
             audio_filename = f"dynamic_audio_{timestamp}_{audio_file.filename}"
-            audio_path = os.path.join("uploads", audio_filename)
-            os.makedirs("uploads", exist_ok=True)
+            audio_path = os.path.join("../uploads", audio_filename)
+            os.makedirs("../uploads", exist_ok=True)
             
             with open(audio_path, "wb") as buffer:
                 content = await audio_file.read()
@@ -464,7 +468,7 @@ async def render_aging_video(
         if audio_file and audio_file.filename != 'dummy.mp3':
             timestamp = int(time.time())
             original_filename = f"audio_{timestamp}_{audio_file.filename}"
-            temp_audio_path = os.path.join("uploads", original_filename)
+            temp_audio_path = os.path.join("../uploads", original_filename)
             os.makedirs("uploads", exist_ok=True)
             
             # Save uploaded file
@@ -611,14 +615,19 @@ async def complete_aging_pipeline(
         if audio_file and audio_file.filename != 'dummy.mp3' and audio_file.size > 0:
             timestamp = int(time.time())
             audio_filename = f"pipeline_audio_{timestamp}_{audio_file.filename}"
-            audio_path = os.path.join("uploads", audio_filename)
-            os.makedirs("uploads", exist_ok=True)
+            
+            # Use absolute path for uploads directory
+            backend_dir = Path(__file__).parent
+            uploads_dir = backend_dir / "uploads"
+            uploads_dir.mkdir(exist_ok=True)
+            audio_path = uploads_dir / audio_filename
             
             with open(audio_path, "wb") as buffer:
                 content = await audio_file.read()
                 buffer.write(content)
             
             logger.info(f"[{pipeline_id}] Custom audio uploaded: {audio_filename}")
+            audio_path = str(audio_path)  # Convert to string for compatibility
         
         # Use default audio if none provided
         if not audio_path:
@@ -721,8 +730,8 @@ async def generate_and_render_video(
         if audio_file and audio_file.filename != 'dummy.mp3':
             timestamp = int(time.time())
             audio_filename = f"audio_{timestamp}_{audio_file.filename}"
-            audio_path = os.path.join("uploads", audio_filename)
-            os.makedirs("uploads", exist_ok=True)
+            audio_path = os.path.join("../uploads", audio_filename)
+            os.makedirs("../uploads", exist_ok=True)
             
             with open(audio_path, "wb") as buffer:
                 content = await audio_file.read()
@@ -830,9 +839,9 @@ async def generate_video(
 
             # Save uploaded audio file temporarily for validation
             temp_audio_filename = f"temp_{uuid.uuid4().hex[:8]}_{audio_file.filename}"
-            temp_audio_path = os.path.join("uploads", temp_audio_filename)
+            temp_audio_path = os.path.join("../uploads", temp_audio_filename)
 
-            os.makedirs("uploads", exist_ok=True)
+            os.makedirs("../uploads", exist_ok=True)
 
             with open(temp_audio_path, "wb") as buffer:
                 shutil.copyfileobj(audio_file.file, buffer)
@@ -865,7 +874,7 @@ async def generate_video(
             else:
                 # No conversion needed, use original file
                 audio_filename = f"{uuid.uuid4().hex[:8]}_{audio_file.filename}"
-                audio_path = os.path.join("uploads", audio_filename)
+                audio_path = os.path.join("../uploads", audio_filename)
                 os.rename(temp_audio_path, audio_path)
                 print(f"Audio file ready (no conversion needed): {audio_path}")
 
@@ -968,13 +977,13 @@ async def health_check():
         "generated": os.path.exists("generated"),
         "uploads": os.path.exists("uploads"),
         "public": os.path.exists("../public"),
-        "public_images": os.path.exists("../public/images")
+        "public_images": os.path.exists("../generated")
     }
     
     # Create missing directories
     os.makedirs("generated", exist_ok=True)
     os.makedirs("uploads", exist_ok=True)
-    os.makedirs("../public/images", exist_ok=True)
+    os.makedirs("../generated", exist_ok=True)
     
     return {
         "status": "healthy",
