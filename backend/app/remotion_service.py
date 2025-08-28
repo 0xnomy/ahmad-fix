@@ -31,8 +31,12 @@ class RemotionService:
             return url
             
     def _copy_images_to_public(self, images: List[GeneratedImage]) -> List[dict]:
-        """Copy generated images to generated directory and return proper data structure"""
+        """Copy generated images to public/images directory and return proper data structure"""
         copied_images = []
+        
+        # Ensure public/images directory exists
+        public_images_dir = os.path.join(self.project_path, "public", "images")
+        os.makedirs(public_images_dir, exist_ok=True)
         
         for img in images:
             if not img.url:
@@ -42,11 +46,16 @@ class RemotionService:
                 # Extract filename from URL
                 filename = self._extract_filename_from_url(img.url)
                 
-                # Check if image exists in generated/
-                image_path = os.path.join(self.public_images_path, filename)
+                # Source path (in generated/)
+                source_path = os.path.join(self.public_images_path, filename)
+                
+                # Destination path (in public/images/)
+                dest_path = os.path.join(public_images_dir, filename)
 
-                if os.path.exists(image_path):
-                    logger.info(f"Image found: {filename}")
+                if os.path.exists(source_path):
+                    # Copy image to public/images/
+                    shutil.copy2(source_path, dest_path)
+                    logger.info(f"Image copied: {filename}")
 
                     # Create proper data structure for Remotion (matching aged-reel-data.ts)
                     photo_data = {
@@ -56,7 +65,7 @@ class RemotionService:
                     }
                     copied_images.append(photo_data)
                 else:
-                    logger.warning(f"Image not found: {image_path}")
+                    logger.warning(f"Image not found: {source_path}")
                     
             except Exception as e:
                 logger.error(f"Error processing image {img.url}: {e}")
@@ -105,7 +114,7 @@ class RemotionService:
             remotion_props = {
                 "title": title,
                 "name": name,
-                "audioFile": f"public/{audio_filename}",
+                "audioFile": audio_filename,  # Just filename, not public/filename
                 "images": photos_data,  # Changed from "years" to "images"
                 "durationPerImage": duration_per_image,  # Dynamic: seconds per image
                 "transitionDuration": transition_duration,  # Dynamic: transition duration

@@ -165,12 +165,18 @@ async def dynamic_aging_video(
         if audio_file and audio_file.filename != 'dummy.mp3' and audio_file.size > 0:
             timestamp = int(time.time())
             audio_filename = f"dynamic_audio_{timestamp}_{audio_file.filename}"
-            audio_path = os.path.join("../uploads", audio_filename)
-            os.makedirs("../uploads", exist_ok=True)
+            
+            # Use project root uploads directory (consistent with static file mounting)
+            project_root = Path(__file__).parent.parent
+            uploads_dir = project_root / "uploads"
+            uploads_dir.mkdir(exist_ok=True)
+            audio_path = uploads_dir / audio_filename
             
             with open(audio_path, "wb") as buffer:
                 content = await audio_file.read()
                 buffer.write(content)
+            
+            audio_path = str(audio_path)  # Convert to string for compatibility
             
             # Validate audio
             validation = audio_processor.validate_audio(audio_path)
@@ -468,14 +474,19 @@ async def render_aging_video(
         if audio_file and audio_file.filename != 'dummy.mp3':
             timestamp = int(time.time())
             original_filename = f"audio_{timestamp}_{audio_file.filename}"
-            temp_audio_path = os.path.join("../uploads", original_filename)
-            os.makedirs("uploads", exist_ok=True)
+            
+            # Use project root uploads directory (consistent with static file mounting)
+            project_root = Path(__file__).parent.parent
+            uploads_dir = project_root / "uploads"
+            uploads_dir.mkdir(exist_ok=True)
+            temp_audio_path = uploads_dir / original_filename
             
             # Save uploaded file
             with open(temp_audio_path, "wb") as buffer:
                 content = await audio_file.read()
                 buffer.write(content)
             
+            temp_audio_path = str(temp_audio_path)  # Convert to string for compatibility
             logger.info(f"[{render_id}] Audio uploaded: {temp_audio_path}")
             
             try:
@@ -616,9 +627,9 @@ async def complete_aging_pipeline(
             timestamp = int(time.time())
             audio_filename = f"pipeline_audio_{timestamp}_{audio_file.filename}"
             
-            # Use absolute path for uploads directory
-            backend_dir = Path(__file__).parent
-            uploads_dir = backend_dir / "uploads"
+            # Use project root uploads directory (consistent with static file mounting)
+            project_root = Path(__file__).parent.parent
+            uploads_dir = project_root / "uploads"
             uploads_dir.mkdir(exist_ok=True)
             audio_path = uploads_dir / audio_filename
             
@@ -730,12 +741,18 @@ async def generate_and_render_video(
         if audio_file and audio_file.filename != 'dummy.mp3':
             timestamp = int(time.time())
             audio_filename = f"audio_{timestamp}_{audio_file.filename}"
-            audio_path = os.path.join("../uploads", audio_filename)
-            os.makedirs("../uploads", exist_ok=True)
+            
+            # Use project root uploads directory (consistent with static file mounting)
+            project_root = Path(__file__).parent.parent
+            uploads_dir = project_root / "uploads"
+            uploads_dir.mkdir(exist_ok=True)
+            audio_path = uploads_dir / audio_filename
             
             with open(audio_path, "wb") as buffer:
                 content = await audio_file.read()
                 buffer.write(content)
+            
+            audio_path = str(audio_path)  # Convert to string for compatibility
             
             print(f"🎵 Audio uploaded: {audio_path}")
         else:
@@ -839,13 +856,17 @@ async def generate_video(
 
             # Save uploaded audio file temporarily for validation
             temp_audio_filename = f"temp_{uuid.uuid4().hex[:8]}_{audio_file.filename}"
-            temp_audio_path = os.path.join("../uploads", temp_audio_filename)
-
-            os.makedirs("../uploads", exist_ok=True)
+            
+            # Use project root uploads directory (consistent with static file mounting)
+            project_root = Path(__file__).parent.parent
+            uploads_dir = project_root / "uploads"
+            uploads_dir.mkdir(exist_ok=True)
+            temp_audio_path = uploads_dir / temp_audio_filename
 
             with open(temp_audio_path, "wb") as buffer:
                 shutil.copyfileobj(audio_file.file, buffer)
 
+            temp_audio_path = str(temp_audio_path)  # Convert to string for compatibility
             print(f"Temporary audio file saved: {temp_audio_path}")
 
             # Validate audio file using AudioProcessor

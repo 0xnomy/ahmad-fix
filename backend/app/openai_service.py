@@ -269,20 +269,22 @@ class OpenAIService:
 
     async def _save_base64_image(self, base64_data: str, filename: str) -> str:
         try:
+            from pathlib import Path
             image_bytes = base64.b64decode(base64_data)
             
-            # Save to generated directory for frontend access
-            generated_dir = "../generated"
-            os.makedirs(generated_dir, exist_ok=True)
+            # Use absolute path to generated directory
+            backend_dir = Path(__file__).parent.parent.parent
+            generated_dir = backend_dir / "generated"
+            generated_dir.mkdir(exist_ok=True)
             
-            file_path = os.path.join(generated_dir, filename)
+            file_path = generated_dir / filename
             with open(file_path, 'wb') as f:
                 f.write(image_bytes)
             
-            logger.debug(f"Image saved: {filename}")
+            logger.info(f"Image saved successfully: {file_path}")
             # Return the full path for frontend access through static mount
             return f"/generated/{filename}"
             
         except Exception as e:
-            logger.error(f"Error saving image: {str(e)}")
+            logger.error(f"Error saving image {filename}: {str(e)}")
             return ""

@@ -204,6 +204,13 @@
                         <div class="mt-1 text-xs text-gray-500">
                             Upload your music file (MP3, WAV, M4A - max 10MB) - required for video creation
                         </div>
+                        <div class="mt-2">
+                            <button type="button"
+                                onclick="document.getElementById('audioSelectionSection').classList.remove('hidden'); document.getElementById('imageReviewSection').classList.add('hidden');"
+                                class="text-xs text-blue-600 hover:text-blue-800 underline">
+                                <i class="fas fa-tools mr-1"></i>Test Audio Upload Section
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -622,8 +629,9 @@
                             <!-- Audio Upload Input -->
                             <div class="flex items-center space-x-4">
                                 <div class="flex-1">
-                                    <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a,.aac,audio/*" class="hidden">
-                                    <button type="button" onclick="document.getElementById('audioFileInput').click()"
+                                    <input type="file" id="audioFileUpload" accept=".mp3,.wav,.m4a,.aac,audio/*"
+                                        class="hidden">
+                                    <button type="button" onclick="document.getElementById('audioFileUpload').click()"
                                         class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center">
                                         <i class="fas fa-upload mr-2"></i>Choose Audio File
                                     </button>
@@ -1187,15 +1195,19 @@ Your video is ready for download!
             }
 
             // Audio selection section upload
-            const audioFileInput = document.getElementById('audioFileUpload');
-            if (audioFileInput) {
-                console.log('Audio selection input found:', audioFileInput.id);
-                audioFileInput.addEventListener('change', function (e) {
+            const audioSelectionInput = document.getElementById('audioFileUpload');
+            if (audioSelectionInput) {
+                console.log('Audio selection input found:', audioSelectionInput.id);
+                console.log('Audio selection input element:', audioSelectionInput);
+                audioSelectionInput.addEventListener('change', function (e) {
                     console.log('Audio selection input change event fired');
-                    handleAudioFileInput(audioFileInput);
+                    console.log('Files selected:', e.target.files);
+                    handleAudioFileInput(audioSelectionInput);
                 });
+                console.log('Event listener attached to audioFileUpload');
             } else {
                 console.error('Audio selection input NOT found!');
+                console.log('Available elements with file input:', document.querySelectorAll('input[type="file"]'));
             }
         });
 
