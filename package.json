@@ -1,0 +1,43 @@
+{
+  "name": "aged-reel-template",
+  "version": "1.0.0",
+  "description": "My Remotion video",
+  "repository": {},
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@remotion/cli": "4.0.340",
+    "@remotion/google-fonts": "^4.0.340",
+    "@remotion/tailwind-v4": "4.0.340",
+    "@remotion/zod-types": "4.0.340",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.340",
+    "tailwindcss": "4.0.0",
+    "zod": "3.22.3"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "4.0.340",
+    "@types/react": "19.0.0",
+    "@types/web": "0.0.166",
+    "eslint": "9.19.0",
+    "prettier": "3.6.0",
+    "typescript": "5.8.2",
+    "concurrently": "^8.2.2"
+  },
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "upgrade": "remotion upgrade",
+    "lint": "eslint src && tsc",
+    "backend": "python start_backend_new.py",
+    "frontend": "python start_frontend.py",
+    "start": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "start-backend": "cd backend && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "start-frontend": "python start_frontend.py",
+    "test-api": "python test_api.py"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}

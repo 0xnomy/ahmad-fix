@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Aging App Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .selected-image {
+            border: 3px solid #22c55e !important;
+            transform: scale(1.02);
+            box-shadow: 0 10px 25px -5px rgba(34, 197, 94, 0.3);
+        }
+
+        .image-overlay {
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+        }
+
+        .tiktok-gradient {
+            background: linear-gradient(45deg, #ff0050, #ff6b35, #ff0050);
+        }
+
+        /* Custom line clamp for better text display */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-clamp: 2;
+            overflow: hidden;
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            line-clamp: 3;
+            overflow: hidden;
+        }
+
+        /* Card animations and hover effects */
+        .image-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .image-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Declined image styling */
+        .image-card.declined {
+            opacity: 0.5;
+            filter: grayscale(100%);
+            transform: scale(0.95);
+        }
+
+        /* Better button spacing */
+        .image-card button {
+            min-height: 32px;
+            transition: all 0.2s ease;
+        }
+
+        /* Selection indicator animation */
+        .selection-indicator.visible {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-50 via-red-50 to-pink-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white/90 backdrop-blur-sm shadow-lg border-b-2 border-pink-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 tiktok-gradient rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fab fa-tiktok text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">✨ Aging Video Creator</h1>
+                        <p class="text-gray-600 text-sm">Turn any photo into a viral aging transformation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Input Section -->
+        <div class="bg-white rounded-2xl shadow-xl border-2 border-pink-200 p-8 mb-8">
+            <div class="flex items-center mb-6">
+                <div
+                    class="w-10 h-10 tiktok-gradient rounded-xl flex items-center justify-center text-white font-bold mr-4">
+                    <i class="fas fa-sparkles"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Create Your Aging Transformation</h2>
+                    <p class="text-gray-600 text-sm">Simple 4-step process to create amazing aging videos</p>
+                </div>
+            </div>
+
+            <form id="generateForm" class="space-y-6">
+                <div>
+                    <label for="prompt" class="block text-sm font-semibold text-gray-700 mb-3">
+                        <i class="fas fa-user mr-2 text-pink-600"></i>
+                        Describe the person you want to age
+                    </label>
+                    <textarea id="prompt" name="prompt" rows="4"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 resize-none transition-all duration-200"
+                        placeholder="Example: A young software developer with expressive eyes, sitting in a modern office"
+                        required></textarea>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <i class="fas fa-lightbulb mr-1 text-yellow-500"></i>
+                        Tip: Be specific about appearance, clothing, and background for best results
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="num_images" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-hourglass-half mr-2 text-pink-600"></i>
+                            How many life stages do you want?
+                        </label>
+                        <input type="number" id="num_images" name="num_images" min="2" max="15" value="5"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg font-semibold"
+                            placeholder="Enter number (2-15)">
+                        <div class="mt-2 text-xs text-gray-500">
+                            <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                            We'll automatically create a complete aging journey from young to old
+                        </div>
+
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-music mr-2 text-pink-600"></i>
+                            Background music (optional)
+                        </label>
+                        <div class="flex items-center space-x-3">
+                            <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a,.aac,audio/*" class="hidden"
+                                onchange="handleAudioUpload(this)">
+                            <button type="button" onclick="document.getElementById('audioFileInput').click()"
+                                class="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg font-semibold transition-colors text-sm flex items-center">
+                                <i class="fas fa-upload mr-1"></i>Upload Music
+                            </button>
+                            <div id="mainAudioPreview" class="hidden flex items-center space-x-2 text-sm text-gray-600">
+                                <i class="fas fa-music text-purple-600"></i>
+                                <span id="mainAudioFileName"></span>
+                                <button type="button" onclick="removeMainAudio()"
+                                    class="text-red-500 hover:text-red-700 transition-colors ml-2">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-1 text-xs text-gray-500">
+                            Upload your music file (MP3, WAV, M4A - max 10MB) - required for video creation
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simple Action Button -->
+                <div class="text-center pt-4">
+                    <button type="submit" id="generateBtn"
+                        class="w-full max-w-md mx-auto tiktok-gradient text-white font-bold py-4 px-8 rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none pulse">
+                        <span id="generateBtnContent">
+                            <i class="fas fa-magic mr-2"></i>
+                            ✨ Create My Aging Photos
+                        </span>
+                    </button>
+                    <div class="mt-3 text-center text-sm text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        We'll guide you through each step: Photos → Review → Music → Video
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Image Review Section -->
+        <div id="imageReviewSection" class="hidden">
+            <!-- Progress Steps -->
+            <div>
+                <label for="num_images" class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-hourglass-half mr-2 text-pink-600"></i>
+                    How many life stages do you want?
+                </label>
+                <input type="number" id="num_images" name="num_images" min="2" max="15" value="5"
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg font-semibold"
+                    placeholder="Enter number (2-15)">
+                <div class="mt-2 text-xs text-gray-500">
+                    <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                    We'll automatically create a complete aging journey from young to old
+                </div>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-heart mr-3"></i>
+                    Choose Your Favorite Photos
+                </h3>
+                <p class="mt-1 opacity-90">Select the photos you love most for your aging video</p>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-bold" id="reviewImageCount">0</div>
+                <div class="text-sm opacity-90">Photos Ready</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
+        <!-- Image Review Grid -->
+        <div id="reviewImagesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Review images will be inserted here -->
+        </div>
+
+        <!-- Quick Actions -->
+        <div
+            class="flex flex-col md:flex-row items-center justify-between pt-6 border-t border-gray-200 space-y-4 md:space-y-0">
+            <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+                <button onclick="regenerateAllImages()"
+                    class="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-semibold transition-colors flex items-center shadow-lg">
+                    <i class="fas fa-redo mr-2"></i>
+                    Make New Photos
+                </button>
+                <button onclick="goBackToForm()"
+                    class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-semibold transition-colors flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Start Over
+                </button>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-4">
+                <div class="text-center md:text-right">
+                    <div class="text-lg font-bold text-green-600">
+                        <span id="acceptedCount">0</span> favorites selected
+                    </div>
+                    <div class="text-xs text-gray-500">You need at least 1 photo to continue</div>
+                </div>
+                <button onclick="proceedToVideoSetup()" id="proceedBtn"
+                    class="px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-colors flex items-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-arrow-right mr-2"></i>
+                    Continue with Favorites
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Audio Selection Section -->
+    <div id="audioSelectionSection" class="hidden">
+        <!-- Progress Steps -->
+        <div class="mb-8">
+            <div class="flex items-center justify-center space-x-2 md:space-x-4">
+                <div class="flex items-center">
+                    <div
+                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Photos Ready</span>
+                </div>
+                <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
+                <div class="flex items-center">
+                    <div
+                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Favorites Chosen</span>
+                </div>
+                <div class="w-8 md:w-12 h-0.5 bg-blue-300"></div>
+                <div class="flex items-center">
+                    <div
+                        class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-blue-600 hidden md:block">Add Music</span>
+                </div>
+                <div class="w-8 md:w-12 h-0.5 bg-gray-300"></div>
+                <div class="flex items-center">
+                    <div
+                        class="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-gray-500 hidden md:block">Make Video</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-t-2xl shadow-xl p-6 text-white">
+            <div>
+                <h3 class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-music mr-3"></i>
+                    Add Some Music
+                </h3>
+                <p class="mt-1 opacity-90">Choose background music to make your aging video more engaging</p>
+            </div>
+        </div>
+
+        <!-- Audio Content -->
+        <div class="bg-white rounded-b-2xl shadow-xl p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Upload Audio -->
+                <div
+                    class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                    <h4 class="text-lg font-semibold mb-2">Upload Your Audio</h4>
+                    <p class="text-gray-600 mb-4">Drag and drop an audio file or click to browse</p>
+                    <input type="file" id="audioFileUpload" accept="audio/*" class="hidden">
+                    <button onclick="document.getElementById('audioFileUpload').click()"
+                        class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-upload mr-2"></i>Choose File
+                    </button>
+                    <div id="uploadedAudioInfo" class="mt-4 text-sm text-gray-600 hidden">
+                        <i class="fas fa-music mr-2"></i>
+                        <span id="uploadedFileName"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Actions -->
+            <div class="flex justify-between items-center mt-6 pt-6 border-t">
+                <button onclick="backToImageReview()"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Images
+                </button>
+
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-600">
+                        <span id="selectedAudioName">No audio selected</span>
+                    </div>
+                    <button onclick="proceedToVideoCreation()" id="proceedToVideoBtn"
+                        class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-arrow-right mr-2"></i>Create Video with Audio
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Creation Section -->
+    <div id="videoCreationSection" class="hidden">
+        <!-- Progress Steps -->
+        <div class="mb-8">
+            <div class="flex items-center justify-center space-x-2 md:space-x-4">
+                <div class="flex items-center">
+                    <div
+                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Photos Ready</span>
+                </div>
+                <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
+                <div class="flex items-center">
+                    <div
+                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">Music Added</span>
+                </div>
+                <div class="w-8 md:w-12 h-0.5 bg-green-300"></div>
+                <div class="flex items-center">
+                    <div
+                        class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-green-600 hidden md:block">All Ready</span>
+                </div>
+                <div class="w-8 md:w-12 h-0.5 bg-pink-300"></div>
+                <div class="flex items-center">
+                    <div
+                        class="w-8 h-8 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg pulse">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-pink-600 hidden md:block">Make Video</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Creation Header -->
+        <div class="bg-gradient-to-r from-pink-600 to-red-600 rounded-t-2xl shadow-xl p-6 text-white">
+            <div class="text-center">
+                <h3 class="text-3xl font-bold flex items-center justify-center">
+                    <i class="fas fa-video mr-3"></i>
+                    🎬 Let's Make Your Video!
+                </h3>
+                <p class="mt-2 opacity-90 text-lg">Everything is ready - time to create your amazing aging
+                    transformation!</p>
+            </div>
+        </div>
+
+        <!-- Video Creation Content -->
+        <div class="bg-white rounded-b-2xl shadow-xl p-8">
+            <div class="text-center">
+                <!-- Success Indicator -->
+                <div class="mb-8">
+                    <div
+                        class="inline-flex items-center bg-green-100 text-green-800 px-6 py-3 rounded-full text-lg font-semibold mb-6 shadow-lg">
+                        <i class="fas fa-check-circle mr-3 text-xl"></i>
+                        ✅ Everything looks perfect!
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200">
+                            <i class="fas fa-images text-4xl text-blue-600 mb-3"></i>
+                            <div class="text-2xl font-bold text-blue-700" id="finalImageCount">0</div>
+                            <div class="text-blue-600 font-medium">Photos Selected</div>
+                        </div>
+                        <div
+                            class="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200">
+                            <i class="fas fa-music text-4xl text-purple-600 mb-3"></i>
+                            <div class="text-2xl font-bold text-purple-700">1</div>
+                            <div class="text-purple-600 font-medium" id="finalAudioName">Music Track</div>
+                        </div>
+                        <div
+                            class="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200">
+                            <i class="fas fa-clock text-4xl text-green-600 mb-3"></i>
+                            <div class="text-2xl font-bold text-green-700" id="estimatedDuration">~30s</div>
+                            <div class="text-green-600 font-medium">Video Length</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-6">
+                    <div class="max-w-md mx-auto">
+                        <button onclick="generateFinalVideo()" id="generateVideoBtn"
+                            class="w-full bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-8 py-5 rounded-2xl text-xl font-bold transition-all transform hover:scale-105 shadow-xl">
+                            <i class="fas fa-magic mr-3 text-xl"></i>
+                            ✨ Create My Aging Video
+                        </button>
+                        <div class="mt-2 text-sm text-gray-500">
+                            This might take a few minutes - we're creating something amazing!
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center space-x-4">
+                        <button onclick="backToAudioSelection()"
+                            class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>Change Music
+                        </button>
+                        <button onclick="startOver()"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-colors">
+                            <i class="fas fa-redo mr-2"></i>Start Over
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="hidden">
+        <!-- Stats Header -->
+        <div class="bg-white rounded-t-2xl shadow-xl border-l border-r border-t border-gray-200 p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <i class="fas fa-images mr-3 text-green-600"></i>
+                    Generated Results
+                </h3>
+                <div class="flex items-center space-x-6 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-green-600" id="generationTime">--</div>
+                        <div class="text-xs text-gray-500">Generation Time</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-blue-600" id="successCount">0</div>
+                        <div class="text-xs text-gray-500">Successful</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gray-600" id="totalCount">0</div>
+                        <div class="text-xs text-gray-500">Total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images Grid -->
+        <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
+            <!-- Instructions -->
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-blue-600 text-lg mr-3 mt-0.5"></i>
+                    <div class="text-blue-800">
+                        <h4 class="font-semibold mb-1">Review Your Generated Images</h4>
+                        <p class="text-sm">Each image shows your character at different ages. You can
+                            <strong>Accept</strong> images you like, <strong>Retry</strong> to regenerate specific
+                            ones, or <strong>Decline</strong> images you don't want to use.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="imagesGrid"
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Generated images will be inserted here -->
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-8 flex justify-center space-x-4">
+                <button id="selectAllBtn"
+                    class="px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-lg font-semibold transition-colors">
+                    <i class="fas fa-check-double mr-2"></i>Select All for TikTok
+                </button>
+                <button id="downloadBtn"
+                    class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
+                    <i class="fas fa-download mr-2"></i>Download Selected
+                </button>
+                <button id="regenerateAllBtn"
+                    class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
+                    <i class="fas fa-redo mr-2"></i>Regenerate All
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selected Images for Video Section -->
+    <div id="selectedSection" class="hidden">
+        <div class="bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 rounded-t-2xl shadow-xl p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h3 class="text-2xl font-bold flex items-center">
+                    <i class="fab fa-tiktok mr-3 text-3xl"></i>
+                    Ready for TikTok Video
+                </h3>
+                <div class="text-right">
+                    <div class="text-lg font-bold" id="selectedCount">0</div>
+                    <div class="text-sm opacity-90">Images Selected</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-b-2xl shadow-xl border-l border-r border-b border-gray-200 p-6">
+            <!-- Selected Images Preview -->
+            <div id="selectedImagesPreview" class="flex space-x-4 mb-6 overflow-x-auto pb-2">
+                <!-- Selected images preview will be inserted here -->
+            </div>
+
+            <!-- Audio Upload Section -->
+            <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                <div class="flex items-start">
+                    <i class="fas fa-music text-purple-600 text-lg mr-3 mt-0.5"></i>
+                    <div class="flex-1">
+                        <h4 class="font-semibold mb-2 text-purple-800">Add Background Music (Required)</h4>
+                        <p class="text-sm text-purple-700 mb-4">Upload your MP3 audio file for the video. Supported
+                            formats: MP3, WAV, M4A (Max 10MB)</p>
+
+                        <!-- Audio Upload Input -->
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-1">
+                                <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a" class="hidden"
+                                    onchange="handleAudioUpload(this)">
+                                <button type="button" onclick="document.getElementById('audioFileInput').click()"
+                                    class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center">
+                                    <i class="fas fa-upload mr-2"></i>Choose Audio File
+                                </button>
+                            </div>
+
+                            <!-- Audio Preview -->
+                            <div id="audioPreview" class="hidden flex items-center space-x-3">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-file-audio text-purple-600"></i>
+                                    <span id="audioFileName" class="text-sm text-gray-700"></span>
+                                    <span id="audioFileSize" class="text-xs text-gray-500"></span>
+                                </div>
+                                <button type="button" onclick="removeAudio()"
+                                    class="text-red-500 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Audio Player (for preview) -->
+                        <div id="audioPlayerContainer" class="hidden mt-3">
+                            <audio id="audioPlayer" controls class="w-full max-w-md">
+                                <source id="audioSource" src="" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+
+                        <!-- Audio Status -->
+                        <div id="audioStatus" class="mt-2 text-sm">
+                            <span class="text-green-600">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                Using default TikTok background music
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Settings -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div>
+                    <label for="videoTitle" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-heading mr-2 text-pink-600"></i>Video Title
+                    </label>
+                    <input type="text" id="videoTitle"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                        placeholder="My Amazing Aging Journey" value="TikTok Aging Challenge">
+                </div>
+                <div>
+                    <label for="characterName" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-user mr-2 text-pink-600"></i>Character Name
+                    </label>
+                    <input type="text" id="characterName"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                        placeholder="Enter character name" value="AI Character">
+                </div>
+                <div class="flex items-end">
+                    <button id="createVideoBtn" disabled
+                        class="w-full tiktok-gradient text-white font-bold py-3 px-6 rounded-xl hover:shadow-xl transition-all duration-300 transform hover:scale-105 shadow-lg pulse disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                        <i class="fas fa-video mr-2"></i>Create TikTok Video
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center text-sm text-gray-500">
+                <i class="fas fa-magic mr-1"></i>
+                Your selected images and audio will be combined into a smooth aging progression video perfect for
+                TikTok!
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Section -->
+    <div id="errorSection" class="hidden">
+        <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
+            <div class="flex items-start">
+                <i class="fas fa-exclamation-triangle text-red-600 text-2xl mr-4 mt-1"></i>
+                <div class="flex-1">
+                    <h3 class="text-lg font-bold text-red-800">Generation Failed</h3>
+                    <p id="errorMessage" class="text-red-700 mt-2">An error occurred during generation.</p>
+                    <div class="mt-4 flex space-x-3">
+                        <button id="retryBtn"
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
+                            <i class="fas fa-retry mr-1"></i>Try Again
+                        </button>
+                        <button id="dismissError"
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium transition-colors">
+                            Dismiss
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        let isGenerating = false;
+        let currentPrompt = '';
+        let currentNumImages = 3;
+        let reviewImages = [];
+        let acceptedImages = [];
+        let selectedAudio = null; // Move to global scope
+
+        // Configure axios base URL - Backend runs on port 8000, Frontend on port 3000
+        const API_BASE_URL = 'http://localhost:8000';
+        console.log('API Base URL:', API_BASE_URL);
+
+        // Global age calculation functions
+        function calculateAutoAgeProgression(numStages) {
+            if (numStages < 2) numStages = 2;
+            if (numStages > 15) numStages = 15;
+
+            let startAge, endAge;
+
+            if (numStages <= 3) {
+                startAge = 20;
+                endAge = 70;
+            } else if (numStages <= 5) {
+                startAge = 18;
+                endAge = 75;
+            } else if (numStages <= 8) {
+                startAge = 16;
+                endAge = 80;
+            } else {
+                startAge = 15;
+                endAge = 85;
+            }
+
+            const totalSpan = endAge - startAge;
+            const gap = totalSpan / (numStages - 1);
+
+            const ages = [];
+            for (let i = 0; i < numStages; i++) {
+                ages.push(Math.round(startAge + (i * gap)));
+            }
+
+            return ages;
+        }
+
+        // Store the calculated ages globally for form submission
+        window.getCalculatedAges = function () {
+            const numImagesInput = document.getElementById('num_images');
+            const numStages = parseInt(numImagesInput.value) || 5;
+            return calculateAutoAgeProgression(numStages);
+        };
+
+        // Initialize
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Frontend loaded, API URL:', API_BASE_URL);
+
+            // Attach audio upload handler for audio selection section
+            const audioFileUpload = document.getElementById('audioFileUpload');
+            if (audioFileUpload) {
+                audioFileUpload.addEventListener('change', function () {
+                    handleAudioUpload(this);
+                });
+            }
+        });
+
+        // Form submission
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await generateImages();
+        });
+
+        // Complete pipeline button
+        document.getElementById('generateAndVideoBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await generateCompleteVideo();
+        });
+
+        async function generateCompleteVideo() {
+            if (isGenerating) {
+                return;
+            }
+
+            const prompt = document.getElementById('prompt').value.trim();
+            const numImages = document.getElementById('num_images').value;
+            const title = document.getElementById('pipelineTitle').value || 'AI Aging Progression';
+            const name = document.getElementById('pipelineCharacterName').value || 'AI Generated Character';
+
+            if (!prompt) {
+                document.getElementById('prompt').focus();
+                alert('Please enter a description for your aging progression');
+                return;
+            }
+
+            // Store current values
+            currentPrompt = prompt;
+            currentNumImages = numImages;
+
+            // Reset UI
+            hideAllSections();
+            updateCompleteVideoButtonState(true);
+
+            try {
+                const formData = new FormData();
+                formData.append('prompt', prompt);
+                formData.append('num_images', numImages);
+                formData.append('title', title);
+                formData.append('name', name);
+
+                // Check if there's a custom audio file uploaded
+                const audioInput = document.getElementById('audioFileInput');
+                if (audioInput && audioInput.files.length > 0) {
+                    formData.append('audio_file', audioInput.files[0]);
+                    console.log('Adding custom audio to complete pipeline:', audioInput.files[0].name);
+                } else {
+                    // Add dummy file to indicate no custom audio
+                    const dummyFile = new File([''], 'dummy.mp3', { type: 'audio/mpeg' });
+                    formData.append('audio_file', dummyFile);
+                }
+
+                console.log('Starting complete aging pipeline...');
+                console.log('Request data:', { prompt, numImages });
+
+                const response = await axios.post(`${API_BASE_URL}/complete-aging-pipeline`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    timeout: 600000 // 10 minutes for complete pipeline
+                });
+
+                console.log('Complete pipeline response:', response.data);
+                const data = response.data;
+
+                if (data.success) {
+                    // Show success message with detailed info
+                    const successMsg = `
+🎉 Complete Pipeline Successful! 🎉
+
+📊 Pipeline Stats:
+• Total Time: ${data.total_time?.toFixed(1)}s
+• Images Generated: ${data.images_generated}
+• Image Generation: ${data.image_generation_time?.toFixed(1)}s  
+• Video Rendering: ${data.video_rendering_time?.toFixed(1)}s
+
+🎬 Video Details:
+• Title: "${data.title}"
+• Character: "${data.name}"
+• Prompt: "${data.prompt}"
+
+Your video is ready for download!
+                    `;
+
+                    alert(successMsg);
+
+                    // Auto-download the video
+                    const videoLink = document.createElement('a');
+                    videoLink.href = `${API_BASE_URL}${data.video_url}`;
+                    videoLink.download = `${data.title.replace(/\s+/g, '_')}_aging_video.mp4`;
+                    videoLink.click();
+
+                    // Also display the generated images for reference
+                    if (data.images && data.images.length > 0) {
+                        displayResults({
+                            images: data.images,
+                            generation_time: data.image_generation_time,
+                            successful_images: data.images_generated,
+                            total_images: data.images_generated
+                        });
+                    }
+                } else {
+                    throw new Error('Complete pipeline failed');
+                }
+
+            } catch (error) {
+                console.error('Complete pipeline error:', error);
+
+                let errorMessage = 'Complete pipeline failed';
+                if (error.response?.data?.detail) {
+                    errorMessage = error.response.data.detail;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                // Show detailed error
+                alert(`❌ Complete Pipeline Failed\n\n${errorMessage}\n\nTry using "Create Images Only" first, then create video manually.`);
+
+                handleError(error);
+            } finally {
+                updateCompleteVideoButtonState(false);
+            }
+        }
+
+        function updateCompleteVideoButtonState(generating) {
+            const btn = document.getElementById('generateAndVideoBtn');
+            const content = document.getElementById('generateAndVideoBtnContent');
+
+            if (generating) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                content.innerHTML = '<i class="fas fa-spinner loading-spinner mr-2"></i>Creating Complete Video...';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                content.innerHTML = '<i class="fas fa-video mr-2"></i>Generate Images + Video';
+            }
+        }
+
+        async function generateImages() {
+            if (isGenerating) {
+                return;
+            }
+
+            const prompt = document.getElementById('prompt').value.trim();
+            const numImagesSelect = document.getElementById('num_images');
+            const numImages = numImagesSelect.value;
+
+            if (!prompt) {
+                document.getElementById('prompt').focus();
+                return;
+            }
+
+            // Store current values
+            currentPrompt = prompt;
+            currentNumImages = numImages;
+
+            // Reset UI - show image review section instead of results
+            hideAllSections();
+            updateButtonState(true);
+
+            try {
+                const formData = new FormData();
+                formData.append('prompt', prompt);
+
+                // Get the automatically calculated ages
+                const calculatedAges = window.getCalculatedAges();
+
+                formData.append('num_images', numImages);
+                formData.append('custom_ages', JSON.stringify(calculatedAges));
+
+                console.log('Using auto-calculated aging:', { numImages, calculatedAges });
+
+                console.log('Making request to:', `${API_BASE_URL}/test-generate-images`);
+                console.log('Form data:', { prompt, numImages, calculatedAges });
+
+                const response = await axios.post(`${API_BASE_URL}/test-generate-images`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    timeout: 300000 // 5 minutes
+                });
+
+                console.log('Response received:', response);
+                const data = response.data;
+
+                if (data.successful_images > 0) {
+                    // Show image review section instead of results
+                    displayImageReview(data);
+                } else {
+                    throw new Error('No images were generated successfully');
+                }
+
+            } catch (error) {
+                console.error('Generation error:', error);
+                handleError(error);
+            } finally {
+                updateButtonState(false);
+            }
+        }
+
+        function updateButtonState(generating) {
+            isGenerating = generating;
+            const btn = document.getElementById('generateBtn');
+            const content = document.getElementById('generateBtnContent');
+
+            if (generating) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.classList.remove('pulse');
+                content.innerHTML = '<i class="fas fa-spinner loading-spinner mr-2"></i>✨ Creating Your Photos...';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.classList.add('pulse');
+                content.innerHTML = '<i class="fas fa-magic mr-2"></i>✨ Create My Aging Photos';
+            }
+        }
+
+        function hideAllSections() {
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('imageReviewSection').classList.add('hidden');
+            document.getElementById('audioSelectionSection').classList.add('hidden');
+            document.getElementById('videoCreationSection').classList.add('hidden');
+            document.getElementById('errorSection').classList.add('hidden');
+
+            // Hide video result section if it exists
+            const videoResultSection = document.getElementById('videoResultSection');
+            if (videoResultSection) {
+                videoResultSection.classList.add('hidden');
+            }
+        }
+
+        // Step-by-Step Workflow Functions
+        function proceedToAudioSelection() {
+            document.getElementById('imageReviewSection').classList.add('hidden');
+            document.getElementById('audioSelectionSection').classList.remove('hidden');
+            updateFinalImageCount();
+        }
+
+        function backToImageReview() {
+            document.getElementById('audioSelectionSection').classList.add('hidden');
+            document.getElementById('imageReviewSection').classList.remove('hidden');
+        }
+
+        function proceedToVideoCreation() {
+            console.log('proceedToVideoCreation called');
+            console.log('selectedAudio at proceed:', selectedAudio);
+
+            // Ensure selectedAudio is properly initialized
+            if (typeof selectedAudio === 'undefined') {
+                selectedAudio = null;
+                console.log('selectedAudio was undefined, set to null');
+            }
+
+            document.getElementById('audioSelectionSection').classList.add('hidden');
+            document.getElementById('videoCreationSection').classList.remove('hidden');
+            updateFinalVideoStats();
+        }
+
+        function backToAudioSelection() {
+            document.getElementById('videoCreationSection').classList.add('hidden');
+            document.getElementById('audioSelectionSection').classList.remove('hidden');
+        }
+
+        function startOver() {
+            hideAllSections();
+            // Reset all variables
+            reviewImages = [];
+            acceptedImages = [];
+            selectedAudio = null;
+            // Clear forms if needed
+            document.getElementById('prompt').value = '';
+
+            // Remove dynamically created video result section
+            const videoResultSection = document.getElementById('videoResultSection');
+            if (videoResultSection) {
+                videoResultSection.remove();
+            }
+
+            // Reset button states
+            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
+            if (proceedToVideoBtn) {
+                proceedToVideoBtn.disabled = false;
+                proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Create Video (Default Audio)';
+            }
+        }
+
+        // Audio Selection Functions
+        // selectedAudio is now declared globally above
+
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM loaded, setting up audio upload handlers...');
+
+            // Initialize proceedToVideoBtn as enabled (audio is optional)
+            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
+            if (proceedToVideoBtn) {
+                proceedToVideoBtn.disabled = false;
+                console.log('Create Video button initialized as enabled (audio optional)');
+            }
+
+            // Handle audio file upload for both main and audio selection sections
+            function handleAudioFileInput(input) {
+                console.log('Audio input change detected:', input.id);
+                const file = input.files[0];
+                console.log('Selected file:', file);
+
+                if (file) {
+                    selectedAudio = { file: file, name: file.name };
+                    console.log('selectedAudio set to:', selectedAudio);
+
+                    // Main form preview
+                    const mainPreview = document.getElementById('mainAudioPreview');
+                    const mainFileName = document.getElementById('mainAudioFileName');
+                    if (mainPreview && mainFileName) {
+                        mainFileName.textContent = file.name;
+                        mainPreview.classList.remove('hidden');
+                        console.log('Main preview updated');
+                    }
+
+                    // Audio selection section preview
+                    const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
+                    const uploadedFileName = document.getElementById('uploadedFileName');
+                    if (uploadedAudioInfo && uploadedFileName) {
+                        uploadedFileName.textContent = file.name;
+                        uploadedAudioInfo.classList.remove('hidden');
+                        console.log('Audio selection preview updated');
+                    }
+
+                    const selectedAudioName = document.getElementById('selectedAudioName');
+                    if (selectedAudioName) {
+                        selectedAudioName.textContent = file.name;
+                        console.log('Selected audio name updated');
+                    }
+
+                    const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
+                    if (proceedToVideoBtn) {
+                        proceedToVideoBtn.disabled = false;
+                        proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Create Video with Audio';
+                        console.log('Create Video button enabled with audio');
+                    }
+
+                    // Also enable the createVideoBtn in the selected section
+                    const createVideoBtn = document.getElementById('createVideoBtn');
+                    if (createVideoBtn) {
+                        createVideoBtn.disabled = false;
+                        console.log('Create TikTok Video button enabled');
+                    }
+                } else {
+                    console.log('No file selected');
+                }
+            }
+
+            // Main form audio upload
+            const mainAudioInput = document.getElementById('audioFileInput');
+            if (mainAudioInput) {
+                console.log('Main audio input found:', mainAudioInput.id);
+                mainAudioInput.addEventListener('change', function (e) {
+                    console.log('Main audio input change event fired');
+                    handleAudioFileInput(mainAudioInput);
+                });
+            } else {
+                console.error('Main audio input NOT found!');
+            }
+
+            // Audio selection section upload
+            const audioFileInput = document.getElementById('audioFileUpload');
+            if (audioFileInput) {
+                console.log('Audio selection input found:', audioFileInput.id);
+                audioFileInput.addEventListener('change', function (e) {
+                    console.log('Audio selection input change event fired');
+                    handleAudioFileInput(audioFileInput);
+                });
+            } else {
+                console.error('Audio selection input NOT found!');
+            }
+        });
+
+        function updateFinalImageCount() {
+            document.getElementById('finalImageCount').textContent = acceptedImages.length;
+        }
+
+        function updateFinalVideoStats() {
+            document.getElementById('finalImageCount').textContent = acceptedImages.length;
+            if (selectedAudio) {
+                document.getElementById('finalAudioName').textContent = selectedAudio.name;
+            } else {
+                document.getElementById('finalAudioName').textContent = 'No audio selected - upload required';
+            }
+            // Calculate estimated duration (2 seconds per image + transitions)
+            const estimatedSeconds = (acceptedImages.length * 2) + 5;
+            document.getElementById('estimatedDuration').textContent = `~${estimatedSeconds}s`;
+        }
+
+        // Video Generation Function
+        async function generateFinalVideo() {
+            console.log('generateFinalVideo called');
+            console.log('acceptedImages length:', acceptedImages.length);
+            console.log('selectedAudio:', selectedAudio);
+
+            if (!acceptedImages.length) {
+                console.log('No images selected');
+                alert('No images selected for video creation.');
+                return;
+            }
+
+            if (acceptedImages.length < 2) {
+                console.log('Not enough images selected');
+                alert('Please select at least 2 images for video creation.');
+                return;
+            }
+
+            const generateBtn = document.getElementById('generateVideoBtn');
+            const originalHTML = generateBtn.innerHTML;
+
+            try {
+                // Update button state
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>Creating Video...';
+
+                // Get title and name from the form
+                const title = document.getElementById('videoTitle').value || 'My Aging Journey';
+                const name = document.getElementById('characterName').value || 'AI Character';
+
+                // Prepare form data for /render-aging-video endpoint
+                const formData = new FormData();
+                formData.append('images_data', JSON.stringify(acceptedImages));
+                formData.append('title', title);
+                formData.append('name', name);
+
+                // Add audio file (required)
+                if (selectedAudio && selectedAudio.file) {
+                    formData.append('audio_file', selectedAudio.file);
+                    console.log('Audio file included:', selectedAudio.name);
+                } else {
+                    alert('Please upload an audio file before creating the video.');
+                    return;
+                }
+
+                console.log('Generating video with:', {
+                    images: acceptedImages.length,
+                    audio: selectedAudio ? selectedAudio.name : 'REQUIRED - none selected',
+                    title: title,
+                    name: name
+                });
+
+                // Use the working /render-aging-video endpoint
+                const response = await axios.post(`${API_BASE_URL}/render-aging-video`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    timeout: 900000 // 15 minutes for video generation
+                });
+
+                console.log('Video generation response:', response);
+                const data = response.data;
+
+                if (data.success && data.video_url) {
+                    // Show video result with download
+                    showVideoResult(data);
+                } else {
+                    throw new Error(data.detail || 'Video generation failed - no video URL received');
+                }
+
+            } catch (error) {
+                console.error('Video generation error:', error);
+                if (error.response) {
+                    console.error('Response data:', error.response.data);
+                    console.error('Response status:', error.response.status);
+                    alert('Error generating video: ' + (error.response.data.detail || error.response.data.message || 'Unknown error'));
+                } else if (error.request) {
+                    console.error('No response received:', error.request);
+                    alert('No response from server. Please check if the backend is running.');
+                } else {
+                    console.error('Request setup error:', error.message);
+                    alert('Error setting up request: ' + error.message);
+                }
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = originalHTML;
+            }
+        }
+
+        function showVideoResult(data) {
+            // Create a video results section
+            hideAllSections();
+
+            // Create video result section
+            const videoSection = document.createElement('div');
+            videoSection.id = 'videoResultSection';
+            videoSection.className = 'max-w-4xl mx-auto';
+            videoSection.innerHTML = `
+                <div class="bg-gradient-to-r from-green-600 to-blue-600 rounded-t-2xl shadow-xl p-6 text-white text-center">
+                    <h3 class="text-3xl font-bold flex items-center justify-center">
+                        <i class="fas fa-check-circle mr-3 text-4xl"></i>
+                        🎉 Video Created Successfully!
+                    </h3>
+                    <p class="mt-2 opacity-90 text-lg">Your aging transformation video is ready!</p>
+                </div>
+
+                <div class="bg-white rounded-b-2xl shadow-xl p-8 text-center">
+                    <div class="mb-6">
+                        <h4 class="text-xl font-bold text-gray-900 mb-4">Video Details</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="p-4 bg-blue-50 rounded-lg">
+                                <i class="fas fa-images text-2xl text-blue-600 mb-2"></i>
+                                <div class="text-lg font-bold text-blue-700">${acceptedImages.length}</div>
+                                <div class="text-blue-600">Photos Used</div>
+                            </div>
+                            <div class="p-4 bg-purple-50 rounded-lg">
+                                <i class="fas fa-music text-2xl text-purple-600 mb-2"></i>
+                                <div class="text-lg font-bold text-purple-700">${selectedAudio ? selectedAudio.name : 'No Audio'}</div>
+                                <div class="text-purple-600">Audio Track</div>
+                            </div>
+                            <div class="p-4 bg-green-50 rounded-lg">
+                                <i class="fas fa-video text-2xl text-green-600 mb-2"></i>
+                                <div class="text-lg font-bold text-green-700">Ready</div>
+                                <div class="text-green-600">Video Status</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video Player Section -->
+                    <div class="mb-8">
+                        <div class="bg-gray-50 rounded-xl p-6 mb-4">
+                            <h4 class="text-lg font-bold text-gray-900 mb-4 flex items-center justify-center">
+                                <i class="fas fa-play-circle mr-2 text-blue-600"></i>
+                                Preview Your Video
+                            </h4>
+                            <div class="flex justify-center">
+                                <video controls class="max-w-full rounded-lg shadow-lg" style="max-height: 400px;">
+                                    <source src="${API_BASE_URL}${data.video_url}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-3">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Use the controls above to play, pause, and adjust volume
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-4">
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="${API_BASE_URL}${data.video_url}"
+                               download="${data.title || 'aging_video'}.mp4"
+                               class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold rounded-xl transition-all transform hover:scale-105 shadow-lg">
+                                <i class="fas fa-download mr-3"></i>
+                                Download Video
+                            </a>
+
+                            <button onclick="startOver()"
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors">
+                                <i class="fas fa-redo mr-2"></i>Create Another Video
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">
+                                <i class="fas fa-lightbulb mr-1 text-yellow-500"></i>
+                                Tip: Preview your video above, then download when you're ready!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-600">
+                            <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                            Your video features smooth transitions, custom audio, and professional aging effects!
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            // Insert the video section
+            document.querySelector('.max-w-7xl.mx-auto.px-6.py-8').appendChild(videoSection);
+        }
+
+        // Image Review Functions
+        function displayImageReview(data) {
+            reviewImages = data.images || [];
+            acceptedImages = [...reviewImages]; // Initially accept all images
+
+            // Update review header
+            document.getElementById('reviewImageCount').textContent = reviewImages.length;
+            updateAcceptedCount();
+
+            // Clear and populate review grid
+            const reviewGrid = document.getElementById('reviewImagesGrid');
+            reviewGrid.innerHTML = '';
+
+            reviewImages.forEach((image, index) => {
+                if (image.url) {
+                    const reviewCard = createImageReviewCard(image, index);
+                    reviewGrid.appendChild(reviewCard);
+                }
+            });
+
+            // Show review section
+            document.getElementById('imageReviewSection').classList.remove('hidden');
+        }
+
+        function createImageReviewCard(image, index) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'bg-white border-2 border-gray-200 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all transform hover:scale-105';
+            cardDiv.id = `review-card-${index}`;
+
+            cardDiv.innerHTML = `
+                <div class="relative">
+                    <img src="${image.url.startsWith('http') ? image.url : `${API_BASE_URL}${image.url.startsWith('/') ? image.url : '/' + image.url}`}" 
+                         alt="${image.caption || 'Generated aging photo'}"
+                         class="w-full h-48 object-contain bg-gray-100">
+                    
+                    <!-- Status Badge -->
+                    <div class="absolute top-3 right-3">
+                        <span id="status-${index}" class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800 shadow-lg">
+                            <i class="fas fa-heart mr-1"></i>❤️ Love it!
+                        </span>
+                    </div>
+                    
+                    <!-- Age Badge -->
+                    <div class="absolute top-3 left-3">
+                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800 shadow-lg">
+                            ${image.age ? `Age ${image.age}` : 'Age N/A'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">${image.caption || 'Your character at this age'}</p>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex space-x-2">
+                            <button onclick="acceptImage(${index})" id="accept-${index}"
+                                class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg font-semibold transition-all shadow-lg">
+                                <i class="fas fa-heart mr-1"></i>Love it
+                            </button>
+                            <button onclick="rejectImage(${index})" id="reject-${index}"
+                                class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg font-semibold transition-all">
+                                <i class="fas fa-times mr-1"></i>Skip
+                            </button>
+                        </div>
+                        <button onclick="regenerateImage(${index})"
+                            class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded-lg font-semibold transition-all">
+                            <i class="fas fa-redo mr-1"></i>Make New
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            return cardDiv;
+        }
+
+        function acceptImage(index) {
+            if (!acceptedImages.includes(reviewImages[index])) {
+                acceptedImages.push(reviewImages[index]);
+            }
+            updateImageStatus(index, 'accepted');
+            updateAcceptedCount();
+        }
+
+        function rejectImage(index) {
+            acceptedImages = acceptedImages.filter(img => img !== reviewImages[index]);
+            updateImageStatus(index, 'rejected');
+            updateAcceptedCount();
+        }
+
+        function updateImageStatus(index, status) {
+            const statusBadge = document.getElementById(`status-${index}`);
+            const acceptBtn = document.getElementById(`accept-${index}`);
+            const rejectBtn = document.getElementById(`reject-${index}`);
+
+            if (status === 'accepted') {
+                statusBadge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800 shadow-lg';
+                statusBadge.innerHTML = '<i class="fas fa-heart mr-1"></i>❤️ Love it!';
+                acceptBtn.classList.add('bg-green-700');
+                acceptBtn.innerHTML = '<i class="fas fa-heart mr-1"></i>Loved!';
+                rejectBtn.classList.remove('bg-red-700');
+                rejectBtn.innerHTML = '<i class="fas fa-times mr-1"></i>Skip';
+            } else if (status === 'rejected') {
+                statusBadge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-gray-100 text-gray-600 shadow-lg';
+                statusBadge.innerHTML = '<i class="fas fa-times mr-1"></i>Skipped';
+                acceptBtn.classList.remove('bg-green-700');
+                acceptBtn.innerHTML = '<i class="fas fa-heart mr-1"></i>Love it';
+                rejectBtn.classList.add('bg-red-700');
+                rejectBtn.innerHTML = '<i class="fas fa-times mr-1"></i>Skipped';
+            }
+        }
+
+        // Audio handling functions
+        function removeUploadedAudio() {
+            document.getElementById('uploadedAudioInfo').classList.add('hidden');
+            document.getElementById('audioFileUpload').value = '';
+            selectedAudio = null;
+            document.getElementById('selectedAudioName').textContent = 'No music selected yet';
+            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
+            if (proceedToVideoBtn) {
+                proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Create Video (Default Audio)';
+            }
+        }
+
+        function updateAcceptedCount() {
+            const count = acceptedImages.length;
+            document.getElementById('acceptedCount').textContent = count;
+
+            // Enable/disable proceed button
+            const proceedBtn = document.getElementById('proceedBtn');
+            if (count > 0) {
+                proceedBtn.disabled = false;
+                proceedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                proceedBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Continue with ' + count + ' Photo' + (count > 1 ? 's' : '');
+            } else {
+                proceedBtn.disabled = true;
+                proceedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                proceedBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Continue with Favorites';
+            }
+        }
+
+        async function regenerateImage(index) {
+            // Get image info
+            const image = reviewImages[index];
+            if (!image) return alert('Image not found');
+
+            // Show loading state (optional: add spinner to card)
+            const card = document.getElementById(`review-card-${index}`);
+            if (card) card.classList.add('opacity-50');
+
+            try {
+                const formData = new FormData();
+                formData.append('prompt', currentPrompt);
+                formData.append('age', image.age.replace(/[^0-9]/g, ''));
+                if (image.call_id) formData.append('base_call_id', image.call_id);
+
+                const response = await axios.post(`${API_BASE_URL}/regenerate-image`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    timeout: 300000
+                });
+                if (response.data.success && response.data.image) {
+                    // Replace the image in reviewImages and update UI
+                    reviewImages[index] = {
+                        ...image,
+                        ...response.data.image
+                    };
+                    // Optionally update acceptedImages if needed
+                    acceptedImages = acceptedImages.map((img, i) => i === index ? reviewImages[index] : img);
+                    // Re-render the review grid
+                    displayImageReview({ images: reviewImages });
+                } else {
+                    alert('Failed to regenerate image.');
+                }
+            } catch (error) {
+                alert('Error regenerating image: ' + (error.message || 'Unknown error'));
+            } finally {
+                if (card) card.classList.remove('opacity-50');
+            }
+        }
+
+        async function regenerateAllImages() {
+            if (confirm('Are you sure you want to regenerate all images? This will replace all current images.')) {
+                await generateImages();
+            }
+        }
+
+        function goBackToForm() {
+            hideAllSections();
+            // Show the form again
+        }
+
+        function proceedToVideoSetup() {
+            // Update the button text to reflect the new step
+            const proceedBtn = document.getElementById('proceedBtn');
+            proceedBtn.onclick = proceedToAudioSelection;
+            proceedBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Proceed to Audio';
+
+            // Call the new audio selection function
+            proceedToAudioSelection();
+        }
+
+        function displayResults(data) {
+            // Update stats
+            document.getElementById('generationTime').textContent = `${data.generation_time?.toFixed(1)}s`;
+            document.getElementById('successCount').textContent = data.successful_images || 0;
+            document.getElementById('totalCount').textContent = data.total_images || 0;
+
+            console.log('Displaying results:', data);
+            console.log('Images received:', data.images);
+
+            // Clear and populate images grid
+            const imagesGrid = document.getElementById('imagesGrid');
+            imagesGrid.innerHTML = '';
+
+            if (data.images && data.images.length > 0) {
+                data.images.forEach((image, index) => {
+                    if (image.url) {
+                        console.log(`Creating card for image ${index}:`, image);
+                        const imageCard = createImageCard(image, index);
+                        imagesGrid.appendChild(imageCard);
+                    }
+                });
+
+                // Show the results section with a smooth animation
+                document.getElementById('resultsSection').classList.remove('hidden');
+
+                // Scroll to results section smoothly
+                setTimeout(() => {
+                    document.getElementById('resultsSection').scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 100);
+
+                console.log(`Displayed ${data.images.length} images successfully`);
+            } else {
+                console.warn('No images to display');
+            }
+        }
+
+        function createImageCard(image, index) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 fade-in border-2 border-transparent cursor-pointer image-card';
+
+            // Clean up age data - extract number from text like "40 Years Old" -> "40"
+            const cleanAge = typeof image.age === 'string' ? image.age.replace(/[^0-9]/g, '') : image.age;
+            const ageNumber = parseInt(cleanAge) || 20;
+
+            card.dataset.imageIndex = index;
+            card.dataset.imageAge = ageNumber;
+            card.dataset.imageCallId = image.call_id || '';
+            card.dataset.imageUrl = image.url;
+            card.dataset.imageCaption = image.caption || '';
+            card.dataset.imageYear = image.year || `${ageNumber}`;
+
+            // Construct image URL - Make sure it points to the backend's static files
+            const imageUrl = image.url.startsWith('http')
+                ? image.url
+                : `${API_BASE_URL}${image.url.startsWith('/') ? image.url : '/' + image.url}`;
+
+            console.log(`Image ${index} URL: "${image.url}" -> "${imageUrl}"`);
+
+            // Create meaningful description based on age
+            const getAgeDescription = (age) => {
+                if (age <= 25) return `Young adult at ${age} years old - full of energy and potential`;
+                if (age <= 40) return `Mature professional at ${age} years old - in their prime`;
+                if (age <= 60) return `Experienced adult at ${age} years old - wise and accomplished`;
+                return `Senior at ${age} years old - with a lifetime of experience`;
+            };
+
+            const description = image.caption && image.caption !== `Age ${ageNumber}`
+                ? image.caption
+                : getAgeDescription(ageNumber);
+
+            card.innerHTML = `
+                <div class="aspect-square bg-gradient-to-br from-pink-100 to-red-100 flex items-center justify-center relative group">
+                    <img 
+                        src="${imageUrl}" 
+                        alt="Person at age ${ageNumber}" 
+                        class="w-full h-full object-contain bg-gray-100 rounded-t-2xl"
+                        onload="console.log('Image loaded successfully:', '${imageUrl}'); this.classList.add('fade-in'); this.parentElement.querySelector('.loading').style.display='none';"
+                        onerror="console.error('Failed to load image:', '${imageUrl}'); this.parentElement.innerHTML='<div class=\\'text-gray-500 text-center p-8\\'>Failed to load image<br><small class=\\'text-xs break-all\\'>${imageUrl}</small></div>'"
+                    />
+                    <div class="loading absolute inset-0 flex items-center justify-center">
+                        <i class="fas fa-spinner loading-spinner text-pink-400 text-2xl"></i>
+                    </div>
+                    <!-- Selection Indicator -->
+                    <div class="selection-indicator absolute top-3 right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center opacity-0 transform scale-0 transition-all duration-300">
+                        <i class="fas fa-check text-white text-sm"></i>
+                    </div>
+                    <!-- Image Overlay -->
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center rounded-t-2xl">
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-1">
+                            <button class="choose-btn px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md font-medium transform hover:scale-105 transition-all text-xs">
+                                <i class="fas fa-check mr-1"></i>Accept
+                            </button>
+                            <button class="regenerate-btn px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium transform hover:scale-105 transition-all text-xs">
+                                <i class="fas fa-redo mr-1"></i>Retry
+                            </button>
+                            <button class="decline-btn px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md font-medium transform hover:scale-105 transition-all text-xs">
+                                <i class="fas fa-times mr-1"></i>Decline
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-lg font-bold text-gray-900">Age ${ageNumber}</h4>
+                        <span class="px-2 py-1 tiktok-gradient text-white rounded-full text-xs font-bold">${ageNumber}y</span>
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed mb-3 line-clamp-2">${description}</p>
+                    ${image.call_id ? `<div class="text-xs text-gray-400 font-mono mb-3 truncate">ID: ${image.call_id.substring(0, 12)}...</div>` : ''}
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-3 gap-1">
+                        <button class="choose-image-btn px-2 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-md text-xs font-semibold transition-colors flex items-center justify-center">
+                            <i class="fas fa-check mr-1"></i>Accept
+                        </button>
+                        <button class="regenerate-image-btn px-2 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md text-xs font-semibold transition-colors flex items-center justify-center">
+                            <i class="fas fa-redo mr-1"></i>Retry
+                        </button>
+                        <button class="decline-image-btn px-2 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-xs font-semibold transition-colors flex items-center justify-center">
+                            <i class="fas fa-times mr-1"></i>Decline
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Add event listeners
+            const chooseBtn = card.querySelector('.choose-image-btn');
+            const regenerateBtn = card.querySelector('.regenerate-image-btn');
+            const declineBtn = card.querySelector('.decline-image-btn');
+            const overlayChooseBtn = card.querySelector('.choose-btn');
+            const overlayRegenerateBtn = card.querySelector('.regenerate-btn');
+            const overlayDeclineBtn = card.querySelector('.decline-btn');
+
+            // Accept/Choose image functionality  
+            const chooseImageHandler = () => {
+                chooseImage(card);
+            };
+
+            // Decline image functionality
+            const declineImage = () => {
+                console.log(`Declined image: Age ${ageNumber}`);
+
+                // Remove any selection
+                card.classList.remove('selected-image');
+                const selectionIndicator = card.querySelector('.selection-indicator');
+                if (selectionIndicator) {
+                    selectionIndicator.classList.remove('visible');
+                }
+
+                // Add declined styling
+                card.classList.add('declined');
+
+                // Update selection indicator to show decline
+                if (selectionIndicator) {
+                    selectionIndicator.innerHTML = '<i class="fas fa-times text-white text-sm"></i>';
+                    selectionIndicator.classList.remove('bg-green-500');
+                    selectionIndicator.classList.add('bg-red-500', 'visible');
+                }
+            };
+
+            // Regenerate image functionality
+            const regenerateImage = async () => {
+                try {
+                    console.log(`Regenerating image: Age ${ageNumber}`);
+
+                    // Show loading state
+                    const imgElement = card.querySelector('img');
+                    const loadingDiv = card.querySelector('.loading');
+                    if (loadingDiv) loadingDiv.style.display = 'flex';
+                    if (imgElement) imgElement.style.opacity = '0.5';
+
+                    // Disable regenerate buttons
+                    const regenBtns = card.querySelectorAll('.regenerate-btn, .regenerate-image-btn');
+                    regenBtns.forEach(btn => {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner loading-spinner mr-1"></i>Working...';
+                    });
+
+                    // Prepare form data
+                    const formData = new FormData();
+                    formData.append('prompt', currentPrompt);
+                    formData.append('age', ageNumber.toString());
+                    formData.append('base_call_id', image.call_id || '');
+
+                    console.log(`Regenerating with prompt: "${currentPrompt}", age: ${ageNumber}, base_call_id: ${image.call_id || 'none'}`);
+
+                    // Call regenerate API
+                    const response = await axios.post(`${API_BASE_URL}/regenerate-image`, formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                        timeout: 120000 // 2 minutes
+                    });
+
+                    if (response.data.success) {
+                        const newImage = response.data.image;
+                        console.log('Regeneration successful:', newImage);
+
+                        // Update image URL
+                        const newImageUrl = newImage.url.startsWith('http')
+                            ? newImage.url
+                            : `${API_BASE_URL}${newImage.url.startsWith('/') ? newImage.url : '/' + newImage.url}`;
+
+                        if (imgElement) {
+                            imgElement.src = newImageUrl;
+                            imgElement.style.opacity = '1';
+                        }
+
+                        // Update card data
+                        card.dataset.imageUrl = newImage.url;
+                        card.dataset.imageCaption = newImage.caption || '';
+                        card.dataset.imageCallId = newImage.call_id || '';
+
+                        // Update caption text
+                        const captionElement = card.querySelector('p');
+                        if (captionElement && newImage.caption) {
+                            captionElement.textContent = newImage.caption;
+                        }
+
+                        // Hide loading
+                        if (loadingDiv) loadingDiv.style.display = 'none';
+
+                        console.log(`Successfully regenerated image for age ${ageNumber}`);
+                    } else {
+                        throw new Error(response.data.error || 'Regeneration failed');
+                    }
+
+                } catch (error) {
+                    console.error('Error regenerating image:', error);
+
+                    // Hide loading and restore opacity
+                    const imgElement = card.querySelector('img');
+                    const loadingDiv = card.querySelector('.loading');
+                    if (loadingDiv) loadingDiv.style.display = 'none';
+                    if (imgElement) imgElement.style.opacity = '1';
+
+                    // Show error message
+                    alert(`Failed to regenerate image for age ${ageNumber}: ${error.message || 'Unknown error'}`);
+                } finally {
+                    // Re-enable regenerate buttons
+                    const regenBtns = card.querySelectorAll('.regenerate-btn, .regenerate-image-btn');
+                    regenBtns.forEach(btn => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-redo mr-1"></i>Retry';
+                    });
+                }
+            };
+
+            // Attach event listeners
+            if (chooseBtn) chooseBtn.addEventListener('click', chooseImageHandler);
+            if (overlayChooseBtn) overlayChooseBtn.addEventListener('click', chooseImageHandler);
+            if (regenerateBtn) regenerateBtn.addEventListener('click', regenerateImage);
+            if (overlayRegenerateBtn) overlayRegenerateBtn.addEventListener('click', regenerateImage);
+            if (declineBtn) declineBtn.addEventListener('click', declineImage);
+            if (overlayDeclineBtn) overlayDeclineBtn.addEventListener('click', declineImage);
+
+            return card;
+        }
+
+        function handleError(error) {
+            let errorMessage = 'An unknown error occurred';
+
+            console.log('Full error object:', error);
+            console.log('Error response:', error.response);
+            console.log('Error request:', error.request);
+            console.log('Error message:', error.message);
+
+            if (error.response) {
+                errorMessage = error.response.data?.detail || `Server error: ${error.response.status}`;
+                console.log('Server responded with error:', error.response.status, error.response.data);
+            } else if (error.request) {
+                errorMessage = 'Network error - unable to connect to backend server. Check if backend is running on http://localhost:8000';
+                console.log('Network error - no response received:', error.request);
+            } else {
+                errorMessage = error.message;
+                console.log('Request setup error:', error.message);
+            }
+
+            document.getElementById('errorMessage').textContent = errorMessage;
+            document.getElementById('errorSection').classList.remove('hidden');
+        }
+
+        // Error handling buttons
+        document.getElementById('retryBtn').addEventListener('click', () => {
+            hideAllSections();
+            generateImages();
+        });
+
+        document.getElementById('dismissError').addEventListener('click', () => {
+            document.getElementById('errorSection').classList.add('hidden');
+        });
+
+        // Select All functionality
+        document.getElementById('selectAllBtn').addEventListener('click', () => {
+            const imageCards = document.querySelectorAll('.image-card');
+            imageCards.forEach(card => {
+                const chooseBtn = card.querySelector('.choose-image-btn');
+                if (chooseBtn) chooseBtn.click();
+            });
+        });
+
+        // Regenerate All functionality
+        document.getElementById('regenerateAllBtn').addEventListener('click', async () => {
+            if (currentPrompt) {
+                hideAllSections();
+                generateImages();
+            }
+        });
+
+        // Download functionality
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const selectedCards = document.querySelectorAll('.image-card.selected-image');
+
+            if (selectedCards.length === 0) {
+                alert('Please select images first by clicking Accept on the images you want');
+                return;
+            }
+
+            selectedCards.forEach((card, index) => {
+                const img = card.querySelector('img');
+                const age = card.dataset.imageAge;
+
+                // Create download link
+                const link = document.createElement('a');
+                link.href = img.src;
+                link.download = `tiktok_aging_age_${age}.png`;
+                link.click();
+            });
+        });
+
+        // Auto Age Range Calculation
+        document.addEventListener('DOMContentLoaded', function () {
+            const numImagesInput = document.getElementById('num_images');
+            const ageStagesDiv = document.getElementById('ageStages');
+
+            function updateAgePreview() {
+                const numStages = parseInt(numImagesInput.value) || 5;
+
+                if (numStages < 2) {
+                    ageStagesDiv.innerHTML = '<span class="text-red-600">⚠️ Please enter at least 2 stages</span>';
+                    return;
+                }
+
+                if (numStages > 15) {
+                    ageStagesDiv.innerHTML = '<span class="text-red-600">⚠️ Maximum 15 stages for best results</span>';
+                    return;
+                }
+
+                const ages = calculateAutoAgeProgression(numStages);
+                const ageLabels = ages.map((age, index) => {
+                    if (index === 0) return `${age} (Young)`;
+                    if (index === ages.length - 1) return `${age} (Elder)`;
+                    if (age <= 30) return `${age} (Young Adult)`;
+                    if (age <= 50) return `${age} (Adult)`;
+                    if (age <= 65) return `${age} (Mature)`;
+                    return `${age} (Senior)`;
+                });
+
+                ageStagesDiv.innerHTML = `📅 ${ageLabels.join(' → ')}`;
+            }
+
+            // Add event listener
+            numImagesInput.addEventListener('input', updateAgePreview);
+
+            // Initial preview
+            updateAgePreview();
+        });
+
+        // Audio Upload Functions
+        let uploadedAudioFile = null;
+
+        function handleAudioUpload(input) {
+            console.log('handleAudioUpload called with input:', input);
+            console.log('Input files:', input.files);
+
+            // Reset input to ensure onchange fires for same file
+            const currentValue = input.value;
+            input.value = '';
+            input.value = currentValue;
+
+            const file = input.files[0];
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+
+            console.log('Selected file:', file.name, 'Type:', file.type, 'Size:', file.size);
+
+            // Validate file type - be more permissive with MP3 files
+            const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-m4a', 'audio/mp4'];
+            const allowedExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.MP3', '.WAV', '.M4A', '.AAC'];
+
+            // Extract file extension safely
+            const lastDotIndex = file.name.lastIndexOf('.');
+            const fileExt = lastDotIndex !== -1 ? file.name.toLowerCase().substring(lastDotIndex) : '';
+
+            console.log('File validation - Type:', file.type, 'Extension:', fileExt);
+
+            if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExt)) {
+                console.error('File validation failed - Type:', file.type, 'Extension:', fileExt);
+                alert('Please select a valid audio file (MP3, WAV, M4A, AAC)');
+                input.value = '';
+                return;
+            }
+
+            // Validate file size (10MB max)
+            const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+            if (file.size > maxSize) {
+                alert('Audio file is too large. Please choose a file smaller than 10MB.');
+                input.value = '';
+                return;
+            }
+
+            uploadedAudioFile = file;
+            selectedAudio = { file: file, name: file.name }; // Set global selectedAudio
+
+            console.log('Audio uploaded:', selectedAudio);
+
+            // Show preview in main form if input is mainAudioFileInput
+            if (input.id === 'audioFileInput') {
+                const mainPreview = document.getElementById('mainAudioPreview');
+                const mainFileName = document.getElementById('mainAudioFileName');
+                if (mainPreview && mainFileName) {
+                    mainFileName.textContent = file.name;
+                    mainPreview.classList.remove('hidden');
+                    console.log('Main audio preview shown successfully for file:', file.name);
+                }
+            }
+
+            // Show preview in audio selection section if input is audioFileUpload
+            if (input.id === 'audioFileUpload') {
+                // Show uploaded file name
+                const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
+                const uploadedFileName = document.getElementById('uploadedFileName');
+                if (uploadedAudioInfo && uploadedFileName) {
+                    uploadedFileName.textContent = file.name;
+                    uploadedAudioInfo.classList.remove('hidden');
+                }
+            }
+
+            // Update selectedAudioName display
+            const selectedAudioName = document.getElementById('selectedAudioName');
+            if (selectedAudioName) {
+                selectedAudioName.textContent = file.name;
+            }
+
+            // Enable proceedToVideoBtn
+            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
+            if (proceedToVideoBtn) {
+                proceedToVideoBtn.disabled = false;
+                proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Create Video with Audio';
+            }
+
+            // Always show preview in audio selection section
+            displayAudioPreview(file);
+
+            console.log('Audio upload completed successfully');
+        }
+        function displayAudioPreview(file) {
+            const preview = document.getElementById('audioPreview');
+            const fileName = document.getElementById('audioFileName');
+            const fileSize = document.getElementById('audioFileSize');
+            const status = document.getElementById('audioStatus');
+            const playerContainer = document.getElementById('audioPlayerContainer');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioSource = document.getElementById('audioSource');
+
+            // Update file info
+            fileName.textContent = file.name;
+            fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+
+            // Show preview
+            preview.classList.remove('hidden');
+
+            // Update status
+            status.innerHTML = `
+                <span class="text-blue-600">
+                    <i class="fas fa-music mr-1"></i>
+                    Custom audio file selected: ${file.name}
+                </span>
+            `;
+
+            // Setup audio player
+            const audioURL = URL.createObjectURL(file);
+            audioSource.src = audioURL;
+            audioPlayer.load();
+            playerContainer.classList.remove('hidden');
+        }
+
+        function removeAudio() {
+            uploadedAudioFile = null;
+            selectedAudio = null; // Clear global selectedAudio
+
+            const preview = document.getElementById('audioPreview');
+            const status = document.getElementById('audioStatus');
+            const playerContainer = document.getElementById('audioPlayerContainer');
+            const audioInput = document.getElementById('audioFileInput');
+
+            preview.classList.add('hidden');
+            playerContainer.classList.add('hidden');
+            audioInput.value = '';
+
+            // Update selectedAudioName display
+            const selectedAudioName = document.getElementById('selectedAudioName');
+            if (selectedAudioName) {
+                selectedAudioName.textContent = 'No audio selected';
+            }
+
+            // Update proceedToVideoBtn
+            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
+            if (proceedToVideoBtn) {
+                proceedToVideoBtn.disabled = true;
+                proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Upload Audio Required';
+            }
+
+            // Reset status
+            status.innerHTML = `
+                <span class="text-orange-600">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    Please upload an audio file to continue
+                </span>
+            `;
+        }
+
+        function removeMainAudio() {
+            const audioInput = document.getElementById('audioFileInput');
+            const preview = document.getElementById('mainAudioPreview');
+
+            audioInput.value = '';
+            preview.classList.add('hidden');
+
+            // Clear global variables
+            uploadedAudioFile = null;
+            selectedAudio = null;
+
+            // Update selectedAudioName display
+            const selectedAudioName = document.getElementById('selectedAudioName');
+            if (selectedAudioName) {
+                selectedAudioName.textContent = 'No audio selected';
+            }
+
+            // Reset proceedToVideoBtn
+            const proceedToVideoBtn = document.getElementById('proceedToVideoBtn');
+            if (proceedToVideoBtn) {
+                proceedToVideoBtn.disabled = true;
+                proceedToVideoBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i>Proceed to Video';
+            }
+        }
+
+        // Update Selected Section
+        function updateSelectedSection() {
+            console.log('updateSelectedSection called');
+            const selectedCards = document.querySelectorAll('.image-card.selected-image');
+            console.log('selectedCards length:', selectedCards.length);
+            const selectedSection = document.getElementById('selectedSection');
+            const selectedCount = document.getElementById('selectedCount');
+            const selectedPreview = document.getElementById('selectedImagesPreview');
+            const createVideoBtn = document.getElementById('createVideoBtn');
+
+            selectedCount.textContent = selectedCards.length;
+
+            if (selectedCards.length > 0) {
+                selectedSection.classList.remove('hidden');
+
+                // Enable/disable create video button based on images only (audio is optional)
+                const shouldEnable = selectedCards.length >= 2;
+                console.log('shouldEnable createVideoBtn:', shouldEnable, 'images:', selectedCards.length);
+                createVideoBtn.disabled = !shouldEnable;
+                if (!shouldEnable) {
+                    createVideoBtn.title = 'Select at least 2 images to create a video';
+                } else {
+                    if (selectedAudio && selectedAudio.file) {
+                        createVideoBtn.title = 'Create TikTok video with selected images and audio';
+                    } else {
+                        createVideoBtn.title = 'Upload audio file to create video';
+                    }
+                }
+
+                // Update preview
+                selectedPreview.innerHTML = '';
+                selectedCards.forEach(card => {
+                    const img = card.querySelector('img');
+                    const age = card.dataset.imageAge;
+
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'flex-shrink-0 text-center';
+                    previewItem.innerHTML = `
+                        <div class="w-16 h-16 rounded-xl overflow-hidden border-2 border-pink-300 mb-2">
+                            <img src="${img.src}" alt="Age ${age}" class="w-full h-full object-contain bg-gray-100">
+                        </div>
+                        <div class="text-xs font-semibold text-gray-700">Age ${age}</div>
+                    `;
+                    selectedPreview.appendChild(previewItem);
+                });
+            } else {
+                selectedSection.classList.add('hidden');
+            }
+        }
+
+        // Create Video functionality
+        document.getElementById('createVideoBtn').addEventListener('click', async () => {
+            const selectedCards = document.querySelectorAll('.image-card.selected-image');
+
+            if (selectedCards.length < 2) {
+                alert('Please select at least 2 images for video creation');
+                return;
+            }
+
+            const title = document.getElementById('videoTitle').value || 'TikTok Aging Challenge';
+            const name = document.getElementById('characterName').value || 'AI Character';
+            const createBtn = document.getElementById('createVideoBtn');
+
+            try {
+                // Disable button and show loading
+                createBtn.disabled = true;
+                createBtn.innerHTML = '<i class="fas fa-spinner loading-spinner mr-2"></i>Creating Video...';
+
+                // Collect selected image data
+                const selectedImages = Array.from(selectedCards).map(card => {
+                    const img = card.querySelector('img');
+                    const age = card.dataset.imageAge;
+                    const caption = card.dataset.imageCaption || '';
+                    const year = card.dataset.imageYear || age;
+
+                    return {
+                        url: img.src,
+                        age: age,
+                        caption: caption,
+                        year: year,
+                        call_id: card.dataset.imageCallId || ''
+                    };
+                });
+
+                console.log('Creating video with images:', selectedImages);
+
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('images_data', JSON.stringify(selectedImages));
+                formData.append('title', title);
+                formData.append('name', name);
+
+                // Add audio file (required)
+                if (uploadedAudioFile) {
+                    formData.append('audio_file', uploadedAudioFile);
+                    console.log('Adding custom audio:', uploadedAudioFile.name);
+                } else {
+                    alert('Please upload an audio file before creating the video.');
+                    createBtn.disabled = false;
+                    createBtn.innerHTML = 'Create Video';
+                    return;
+                }
+
+                const response = await axios.post(`${API_BASE_URL}/render-aging-video`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    timeout: 300000 // 5 minutes for video rendering
+                });
+
+                console.log('Video creation response:', response.data);
+
+                if (response.data.success) {
+                    // Show success message
+                    alert(`Video created successfully!\nRendering time: ${response.data.rendering_time?.toFixed(1)}s\nImages used: ${response.data.images_used}`);
+
+                    // Create download link
+                    const videoLink = document.createElement('a');
+                    videoLink.href = `${API_BASE_URL}${response.data.video_url}`;
+                    videoLink.download = `${title.replace(/\s+/g, '_')}_aging_video.mp4`;
+                    videoLink.click();
+                } else {
+                    throw new Error('Video creation failed');
+                }
+            } catch (error) {
+                console.error('Video creation error:', error);
+                let errorMsg = 'Video creation failed';
+                if (error.response?.data?.detail) {
+                    errorMsg = error.response.data.detail;
+                } else if (error.message) {
+                    errorMsg = error.message;
+                }
+                alert('Video creation error: ' + errorMsg);
+            } finally {
+                // Re-enable button
+                createBtn.disabled = false;
+                createBtn.innerHTML = '<i class="fas fa-video mr-2"></i>Create TikTok Video';
+            }
+        });
+
+        // Update the chooseImage function to call updateSelectedSection
+        function chooseImage(card) {
+            // Remove selection from other images of same age group
+            const currentAge = card.dataset.imageAge;
+            document.querySelectorAll(`.image-card[data-image-age="${currentAge}"]`).forEach(c => {
+                if (c !== card) {
+                    c.classList.remove('selected-image', 'border-green-500');
+                    const indicator = c.querySelector('.selection-indicator');
+                    if (indicator) {
+                        indicator.classList.remove('opacity-100', 'scale-100');
+                        indicator.classList.add('opacity-0', 'scale-0');
+                    }
+                }
+            });
+
+            // Toggle selection on clicked card
+            const isSelected = card.classList.contains('selected-image');
+            if (isSelected) {
+                // Deselect
+                card.classList.remove('selected-image', 'border-green-500');
+                const indicator = card.querySelector('.selection-indicator');
+                if (indicator) {
+                    indicator.classList.remove('opacity-100', 'scale-100');
+                    indicator.classList.add('opacity-0', 'scale-0');
+                }
+            } else {
+                // Select
+                card.classList.add('selected-image', 'border-green-500');
+                const indicator = card.querySelector('.selection-indicator');
+                if (indicator) {
+                    indicator.classList.remove('opacity-0', 'scale-0');
+                    indicator.classList.add('opacity-100', 'scale-100');
+                }
+            }
+
+            // Update selected section
+            updateSelectedSection();
+
+            console.log(`${isSelected ? 'Deselected' : 'Selected'} image: Age ${currentAge}`);
+        }
+    </script>
+</body>
+
+</html>
