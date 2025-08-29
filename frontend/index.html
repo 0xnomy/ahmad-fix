@@ -165,52 +165,17 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="num_images" class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-hourglass-half mr-2 text-pink-600"></i>
-                            How many life stages do you want?
-                        </label>
-                        <input type="number" id="num_images" name="num_images" min="2" max="15" value="5"
-                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg font-semibold"
-                            placeholder="Enter number (2-15)">
-                        <div class="mt-2 text-xs text-gray-500">
-                            <i class="fas fa-info-circle mr-1 text-blue-500"></i>
-                            We'll automatically create a complete aging journey from young to old
-                        </div>
-
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            <i class="fas fa-music mr-2 text-pink-600"></i>
-                            Background music (optional)
-                        </label>
-                        <div class="flex items-center space-x-3">
-                            <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a,.aac,audio/*" class="hidden">
-                            <button type="button" onclick="document.getElementById('audioFileInput').click()"
-                                class="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg font-semibold transition-colors text-sm flex items-center">
-                                <i class="fas fa-upload mr-1"></i>Upload Music
-                            </button>
-                            <div id="mainAudioPreview" class="hidden flex items-center space-x-2 text-sm text-gray-600">
-                                <i class="fas fa-music text-purple-600"></i>
-                                <span id="mainAudioFileName"></span>
-                                <button type="button" onclick="removeMainAudio()"
-                                    class="text-red-500 hover:text-red-700 transition-colors ml-2">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mt-1 text-xs text-gray-500">
-                            Upload your music file (MP3, WAV, M4A - max 10MB) - required for video creation
-                        </div>
-                        <div class="mt-2">
-                            <button type="button"
-                                onclick="document.getElementById('audioSelectionSection').classList.remove('hidden'); document.getElementById('imageReviewSection').classList.add('hidden');"
-                                class="text-xs text-blue-600 hover:text-blue-800 underline">
-                                <i class="fas fa-tools mr-1"></i>Test Audio Upload Section
-                            </button>
-                        </div>
+                <div>
+                    <label for="num_images" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-hourglass-half mr-2 text-pink-600"></i>
+                        How many life stages do you want?
+                    </label>
+                    <input type="number" id="num_images" name="num_images" min="2" max="15" value="5"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg font-semibold"
+                        placeholder="Enter number (2-15)">
+                    <div class="mt-2 text-xs text-gray-500">
+                        <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                        We'll automatically create a complete aging journey from young to old
                     </div>
                 </div>
 
@@ -385,8 +350,9 @@
                         <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
                         <h4 class="text-lg font-semibold mb-2">Upload Your Audio</h4>
                         <p class="text-gray-600 mb-4">Drag and drop an audio file or click to browse</p>
-                        <input type="file" id="audioFileUpload" accept="audio/*" class="hidden">
-                        <button onclick="document.getElementById('audioFileUpload').click()"
+                        <input type="file" id="audioFileUploadMain" accept="audio/*" class="hidden">
+                        <button
+                            onclick="console.log('🎵 Main audio button clicked'); document.getElementById('audioFileUploadMain').click()"
                             class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition-colors">
                             <i class="fas fa-upload mr-2"></i>Choose File
                         </button>
@@ -623,15 +589,16 @@
                         <i class="fas fa-music text-purple-600 text-lg mr-3 mt-0.5"></i>
                         <div class="flex-1">
                             <h4 class="font-semibold mb-2 text-purple-800">Add Background Music (Required)</h4>
-                            <p class="text-sm text-purple-700 mb-4">Upload your MP3 audio file for the video. Supported
-                                formats: MP3, WAV, M4A (Max 10MB)</p>
+                            <p class="text-sm text-purple-700 mb-4">Upload your audio file for the video. Supported
+                                formats: MP3, WAV, M4A, AAC, OGG (Max 50MB)</p>
 
                             <!-- Audio Upload Input -->
                             <div class="flex items-center space-x-4">
                                 <div class="flex-1">
-                                    <input type="file" id="audioFileUpload" accept=".mp3,.wav,.m4a,.aac,audio/*"
-                                        class="hidden">
-                                    <button type="button" onclick="document.getElementById('audioFileUpload').click()"
+                                    <input type="file" id="audioFileUploadSelection"
+                                        accept=".mp3,.wav,.m4a,.aac,audio/*" class="hidden">
+                                    <button type="button"
+                                        onclick="console.log('🎵 Selection audio button clicked'); document.getElementById('audioFileUploadSelection').click()"
                                         class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors flex items-center">
                                         <i class="fas fa-upload mr-2"></i>Choose Audio File
                                     </button>
@@ -735,6 +702,7 @@
         let reviewImages = [];
         let acceptedImages = [];
         let selectedAudio = null; // Move to global scope
+        let uploadedAudioFile = null; // Declare globally to avoid conflicts
 
         // Configure axios base URL - Backend runs on port 8000, Frontend on port 3000
         const API_BASE_URL = 'http://localhost:8000';
@@ -791,10 +759,13 @@
         });
 
         // Complete pipeline button
-        document.getElementById('generateAndVideoBtn').addEventListener('click', async (e) => {
-            e.preventDefault();
-            await generateCompleteVideo();
-        });
+        const genAndVideoBtn = document.getElementById('generateAndVideoBtn');
+        if (genAndVideoBtn) {
+            genAndVideoBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await generateCompleteVideo();
+            });
+        }
 
         async function generateCompleteVideo() {
             if (isGenerating) {
@@ -827,66 +798,26 @@
                 formData.append('title', title);
                 formData.append('name', name);
 
-                // Check if there's a custom audio file uploaded
-                const audioInput = document.getElementById('audioFileInput');
-                if (selectedAudio && selectedAudio.file) {
-                    formData.append('audio_file', selectedAudio.file);
-                    console.log('Adding custom audio to complete pipeline:', selectedAudio.name);
-                } else {
-                    // Add dummy file to indicate no custom audio
-                    const dummyFile = new File([''], 'dummy.mp3', { type: 'audio/mpeg' });
-                    formData.append('audio_file', dummyFile);
-                }
+                // Complete pipeline will generate images first, then user adds audio in next step
+                // No audio upload needed at this stage
+                console.log('Starting image generation only - audio will be added in next step');
 
                 console.log('Starting complete aging pipeline...');
                 console.log('Request data:', { prompt, numImages });
 
-                const response = await axios.post(`${API_BASE_URL}/complete-aging-pipeline`, formData, {
+                const response = await axios.post(`${API_BASE_URL}/test-generate-images`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
-                    timeout: 600000 // 10 minutes for complete pipeline
+                    timeout: 300000 // 5 minutes for image generation
                 });
 
-                console.log('Complete pipeline response:', response.data);
+                console.log('Image generation response:', response.data);
                 const data = response.data;
 
-                if (data.success) {
-                    // Show success message with detailed info
-                    const successMsg = `
-🎉 Complete Pipeline Successful! 🎉
-
-📊 Pipeline Stats:
-• Total Time: ${data.total_time?.toFixed(1)}s
-• Images Generated: ${data.images_generated}
-• Image Generation: ${data.image_generation_time?.toFixed(1)}s  
-• Video Rendering: ${data.video_rendering_time?.toFixed(1)}s
-
-🎬 Video Details:
-• Title: "${data.title}"
-• Character: "${data.name}"
-• Prompt: "${data.prompt}"
-
-Your video is ready for download!
-                    `;
-
-                    alert(successMsg);
-
-                    // Auto-download the video
-                    const videoLink = document.createElement('a');
-                    videoLink.href = `${API_BASE_URL}${data.video_url}`;
-                    videoLink.download = `${data.title.replace(/\s+/g, '_')}_aging_video.mp4`;
-                    videoLink.click();
-
-                    // Also display the generated images for reference
-                    if (data.images && data.images.length > 0) {
-                        displayResults({
-                            images: data.images,
-                            generation_time: data.image_generation_time,
-                            successful_images: data.images_generated,
-                            total_images: data.images_generated
-                        });
-                    }
+                if (data.success && data.images && data.images.length > 0) {
+                    // Show image review section instead of complete pipeline
+                    displayImageReview(data);
                 } else {
-                    throw new Error('Complete pipeline failed');
+                    throw new Error('Image generation failed');
                 }
 
             } catch (error) {
@@ -1085,14 +1016,7 @@ Your video is ready for download!
 
             // Helper function to update all audio preview sections
             function updateAudioPreviews(fileName) {
-                // Main form preview
-                const mainPreview = document.getElementById('mainAudioPreview');
-                const mainFileName = document.getElementById('mainAudioFileName');
-                if (mainPreview && mainFileName) {
-                    mainFileName.textContent = fileName;
-                    mainPreview.classList.remove('hidden');
-                    console.log('Main preview updated');
-                }
+                // Main form preview removed - audio upload now happens after image selection
 
                 // Audio selection section preview
                 const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
@@ -1130,85 +1054,134 @@ Your video is ready for download!
                     console.log('Create Video button updated:', hasAudio ? 'enabled' : 'disabled');
                 }
             }
-            function handleAudioFileInput(input) {
-                console.log('Audio input change detected:', input.id);
+            async function handleAudioFileInput(input) {
+                console.log('🎵 Audio input change detected:', input.id);
                 const file = input.files[0];
-                console.log('Selected file:', file);
+                console.log('🎵 Selected file:', file);
 
                 if (file) {
-                    console.log('Selected file:', file.name, 'Type:', file.type, 'Size:', file.size, 'Size in MB:', (file.size / 1024 / 1024).toFixed(2));
+                    console.log('🎵 Processing file:', file.name, 'Type:', file.type, 'Size:', file.size, 'Size in MB:', (file.size / 1024 / 1024).toFixed(2));
 
-                    // Validate file type - be more permissive with MP3 files
-                    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-m4a', 'audio/mp4'];
-                    const allowedExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.MP3', '.WAV', '.M4A', '.AAC'];
+                    // Validate file type - be more permissive with audio files
+                    const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-m4a', 'audio/mp4', 'audio/aac', 'audio/ogg'];
+                    const allowedExtensions = ['.mp3', '.wav', '.m4a', '.aac', '.MP3', '.WAV', '.M4A', '.AAC', '.ogg', '.OGG'];
 
                     // Extract file extension safely
                     const lastDotIndex = file.name.lastIndexOf('.');
                     const fileExt = lastDotIndex !== -1 ? file.name.toLowerCase().substring(lastDotIndex) : '';
 
-                    console.log('File validation - Type:', file.type, 'Extension:', fileExt);
+                    console.log('🎵 File validation - Type:', file.type, 'Extension:', fileExt);
 
-                    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExt)) {
-                        console.error('File validation failed - Type:', file.type, 'Extension:', fileExt);
-                        alert('Please select a valid audio file (MP3, WAV, M4A, AAC)');
+                    // More permissive validation - allow if either type matches OR extension matches
+                    const typeValid = allowedTypes.includes(file.type) || file.type.startsWith('audio/');
+                    const extensionValid = allowedExtensions.includes(fileExt);
+
+                    if (!typeValid && !extensionValid) {
+                        console.error('❌ File validation failed - Type:', file.type, 'Extension:', fileExt);
+                        alert('Please select a valid audio file (MP3, WAV, M4A, AAC, OGG)');
                         input.value = '';
                         return;
                     }
 
-                    // Validate file size (10MB max)
-                    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                    // Validate file size (50MB max - consistent with backend)
+                    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
                     if (file.size > maxSize) {
-                        alert('Audio file is too large. Please choose a file smaller than 10MB.');
+                        console.error('❌ File too large:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+                        alert('Audio file is too large. Please choose a file smaller than 50MB.');
                         input.value = '';
                         return;
                     }
 
-                    // Set global variables consistently
-                    selectedAudio = { file: file, name: file.name };
-                    uploadedAudioFile = file; // Also set this global variable for consistency
-                    console.log('Global variables set - selectedAudio:', selectedAudio, 'uploadedAudioFile:', uploadedAudioFile);
+                    try {
+                        // Set global variables consistently
+                        selectedAudio = {
+                            file: file,
+                            name: file.name,
+                            size: file.size,
+                            uploadResult: null // Will be set after backend upload
+                        };
+                        uploadedAudioFile = file; // Also set this global variable for consistency
+                        console.log('✅ Global variables set - selectedAudio:', selectedAudio, 'uploadedAudioFile:', uploadedAudioFile);
 
-                    // Update all preview sections
-                    updateAudioPreviews(file.name);
+                        // Update all preview sections
+                        updateAudioPreviews(file.name);
 
-                    // Enable buttons that require audio
-                    updateAudioButtons(true);
+                        // Enable buttons that require audio
+                        updateAudioButtons(true);
 
-                    // Show audio preview with player
-                    displayAudioPreview(file);
-                    console.log('Audio upload completed successfully');
+                        // Test upload to backend first to get the saved file URL
+                        const uploadResult = await testAudioUploadQuiet(file);
+
+                        // Store upload result in global variable
+                        selectedAudio.uploadResult = uploadResult;
+
+                        // Show audio preview with player using backend-saved file
+                        displayAudioPreview(file, uploadResult);
+
+                        console.log('✅ Audio upload completed successfully');
+                    } catch (error) {
+                        console.error('❌ Error processing audio file:', error);
+                        alert('Error processing audio file: ' + error.message);
+
+                        // Reset on error
+                        selectedAudio = null;
+                        uploadedAudioFile = null;
+                        input.value = '';
+                        updateAudioButtons(false);
+                    }
                 } else {
-                    console.log('No file selected');
+                    console.log('🎵 No file selected');
                 }
             }
 
-            // Main form audio upload
-            const mainAudioInput = document.getElementById('audioFileInput');
-            if (mainAudioInput) {
-                console.log('Main audio input found:', mainAudioInput.id);
-                mainAudioInput.addEventListener('change', function (e) {
-                    console.log('Main audio input change event fired');
-                    handleAudioFileInput(mainAudioInput);
+            // Main form audio upload removed - audio upload now happens after image selection
+
+            // Setup event listeners with better error handling
+            function setupAudioEventListeners() {
+                console.log('🎵 Setting up audio event listeners...');
+
+                // Main audio upload section
+                const mainAudioUploadInput = document.getElementById('audioFileUploadMain');
+                if (mainAudioUploadInput) {
+                    console.log('✅ Main audio upload input found:', mainAudioUploadInput.id);
+                    mainAudioUploadInput.addEventListener('change', function (e) {
+                        console.log('🎵 Main audio upload input change event fired');
+                        console.log('🎵 Files:', e.target.files);
+                        handleAudioFileInput(mainAudioUploadInput);
+                    });
+                } else {
+                    console.error('❌ Main audio upload input NOT found!');
+                }
+
+                // Audio selection section upload
+                const audioSelectionInput = document.getElementById('audioFileUploadSelection');
+                if (audioSelectionInput) {
+                    console.log('✅ Audio selection input found:', audioSelectionInput.id);
+                    console.log('✅ Audio selection input element:', audioSelectionInput);
+                    audioSelectionInput.addEventListener('change', function (e) {
+                        console.log('🎵 Audio selection input change event fired');
+                        console.log('🎵 Files selected:', e.target.files);
+                        handleAudioFileInput(audioSelectionInput);
+                    });
+                    console.log('✅ Event listener attached to audioFileUploadSelection');
+                } else {
+                    console.error('❌ Audio selection input NOT found!');
+                    console.log('Available file inputs:', document.querySelectorAll('input[type="file"]'));
+                }
+
+                // Debug: Check if elements exist at all
+                const allFileInputs = document.querySelectorAll('input[type="file"]');
+                console.log('🔍 All file inputs found:', allFileInputs.length);
+                allFileInputs.forEach((input, index) => {
+                    console.log(`  ${index + 1}. ID: ${input.id}, Accept: ${input.accept}`);
                 });
-            } else {
-                console.error('Main audio input NOT found!');
             }
 
-            // Audio selection section upload
-            const audioSelectionInput = document.getElementById('audioFileUpload');
-            if (audioSelectionInput) {
-                console.log('Audio selection input found:', audioSelectionInput.id);
-                console.log('Audio selection input element:', audioSelectionInput);
-                audioSelectionInput.addEventListener('change', function (e) {
-                    console.log('Audio selection input change event fired');
-                    console.log('Files selected:', e.target.files);
-                    handleAudioFileInput(audioSelectionInput);
-                });
-                console.log('Event listener attached to audioFileUpload');
-            } else {
-                console.error('Audio selection input NOT found!');
-                console.log('Available elements with file input:', document.querySelectorAll('input[type="file"]'));
-            }
+            // Call setup function
+            setupAudioEventListeners();
+
+            // Also setup listeners after a delay to ensure DOM is fully loaded
+            setTimeout(setupAudioEventListeners, 1000);
         });
 
         function updateFinalImageCount() {
@@ -1266,7 +1239,7 @@ Your video is ready for download!
                 // Add audio file (required)
                 if (selectedAudio && selectedAudio.file) {
                     formData.append('audio_file', selectedAudio.file);
-                    console.log('Audio file included:', selectedAudio.name);
+                    console.log('Audio file included:', selectedAudio.name, 'Size:', selectedAudio.file.size);
                 } else {
                     alert('Please upload an audio file before creating the video.');
                     return;
@@ -1524,7 +1497,7 @@ Your video is ready for download!
         // Audio handling functions
         function removeUploadedAudio() {
             document.getElementById('uploadedAudioInfo').classList.add('hidden');
-            document.getElementById('audioFileUpload').value = '';
+            document.getElementById('audioFileUploadSelection').value = '';
             selectedAudio = null;
             uploadedAudioFile = null; // Also clear this global variable
             document.getElementById('selectedAudioName').textContent = 'No music selected yet';
@@ -1978,11 +1951,10 @@ Your video is ready for download!
             updateAgePreview();
         });
 
-        // Audio Upload Functions
-        let uploadedAudioFile = null;
+        // Audio Upload Functions (uploadedAudioFile is already declared globally above)
 
-        function displayAudioPreview(file) {
-            console.log('displayAudioPreview called with file:', file.name, 'Type:', file.type, 'Size:', file.size);
+        function displayAudioPreview(file, uploadResult = null) {
+            console.log('🎵 Displaying audio preview for:', file.name, 'Upload result:', uploadResult);
 
             const preview = document.getElementById('audioPreview');
             const fileName = document.getElementById('audioFileName');
@@ -1992,7 +1964,7 @@ Your video is ready for download!
             const audioPlayer = document.getElementById('audioPlayer');
             const audioSource = document.getElementById('audioSource');
 
-            console.log('Audio preview elements found:', {
+            console.log('🎵 Audio preview elements found:', {
                 preview: !!preview,
                 fileName: !!fileName,
                 fileSize: !!fileSize,
@@ -2002,75 +1974,132 @@ Your video is ready for download!
                 audioSource: !!audioSource
             });
 
-            // Update file info
-            fileName.textContent = file.name;
-            fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            // Update file info with better formatting
+            if (fileName) fileName.textContent = file.name;
+            if (fileSize) fileSize.textContent = `(${(file.size / 1024 / 1024).toFixed(2)} MB)`;
 
             // Show preview
-            preview.classList.remove('hidden');
-            console.log('Audio preview shown, file info updated');
+            if (preview) preview.classList.remove('hidden');
+            console.log('✅ Audio preview shown, file info updated');
 
-            // Update status
-            status.innerHTML = `
-                <span class="text-blue-600">
-                    <i class="fas fa-music mr-1"></i>
-                    Custom audio file selected: ${file.name}
-                </span>
-            `;
-            console.log('Audio status updated');
+            // Update status based on upload result
+            if (status) {
+                if (uploadResult && uploadResult.success) {
+                    status.innerHTML = `
+                        <span class="text-green-600">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            ✅ Audio uploaded to backend: ${uploadResult.saved_filename}
+                            <br><small class="text-gray-600">Saved in backend uploads folder</small>
+                        </span>
+                    `;
+                } else {
+                    status.innerHTML = `
+                        <span class="text-blue-600">
+                            <i class="fas fa-upload mr-1"></i>
+                            Audio file ready: ${file.name} (${file.type || 'audio'}, ${(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                    `;
+                }
+            }
+            console.log('✅ Audio status updated');
 
             // Clean up any existing blob URL
-            if (audioSource.src && audioSource.src.startsWith('blob:')) {
+            if (audioSource && audioSource.src && audioSource.src.startsWith('blob:')) {
                 URL.revokeObjectURL(audioSource.src);
-                console.log('Cleaned up existing blob URL');
+                console.log('🧹 Cleaned up existing blob URL');
             }
 
-            // Setup audio player
-            const audioURL = URL.createObjectURL(file);
-            console.log('Created blob URL for audio file:', audioURL);
-
-            // Set the correct MIME type based on file extension
-            const fileExt = file.name.toLowerCase().split('.').pop();
+            // Setup audio player - prioritize backend URL if available
+            let audioURL;
             let mimeType = 'audio/mpeg'; // default
 
-            if (fileExt === 'wav') {
-                mimeType = 'audio/wav';
-            } else if (fileExt === 'm4a') {
-                mimeType = 'audio/mp4';
-            } else if (fileExt === 'aac') {
-                mimeType = 'audio/aac';
-            } else if (fileExt === 'ogg') {
-                mimeType = 'audio/ogg';
+            if (uploadResult && uploadResult.audio_url) {
+                // Use backend-saved file for preview
+                audioURL = `${API_BASE_URL}${uploadResult.audio_url}`;
+                console.log('🎵 Using backend-saved audio for preview:', audioURL);
+
+                // Determine MIME type from saved filename
+                const savedExt = uploadResult.saved_filename.toLowerCase().split('.').pop();
+                if (savedExt === 'wav') {
+                    mimeType = 'audio/wav';
+                } else if (savedExt === 'm4a') {
+                    mimeType = 'audio/mp4';
+                } else if (savedExt === 'aac') {
+                    mimeType = 'audio/aac';
+                } else if (savedExt === 'ogg') {
+                    mimeType = 'audio/ogg';
+                } else {
+                    mimeType = 'audio/mpeg';
+                }
+            } else {
+                // Fallback to local blob URL
+                audioURL = URL.createObjectURL(file);
+                console.log('🎵 Using local blob URL for preview:', audioURL);
+
+                const fileExt = file.name.toLowerCase().split('.').pop();
+                if (fileExt === 'wav') {
+                    mimeType = 'audio/wav';
+                } else if (fileExt === 'm4a') {
+                    mimeType = 'audio/mp4';
+                } else if (fileExt === 'aac') {
+                    mimeType = 'audio/aac';
+                } else if (fileExt === 'ogg') {
+                    mimeType = 'audio/ogg';
+                }
             }
 
-            console.log('Setting audio source with MIME type:', mimeType);
-            audioSource.src = audioURL;
-            audioSource.type = mimeType;
-            audioPlayer.load();
-            playerContainer.classList.remove('hidden');
-            console.log('Audio player setup complete, player should be visible now');
+            if (audioSource && audioPlayer && playerContainer) {
+                console.log('🎵 Setting audio source with MIME type:', mimeType);
+                audioSource.src = audioURL;
+                audioSource.type = mimeType;
 
-            // Add error handling for audio loading
-            audioPlayer.addEventListener('error', function (e) {
-                console.error('Audio player error:', e);
-                status.innerHTML = `
-                    <span class="text-red-600">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>
-                        Error loading audio file. Please try a different format.
-                    </span>
-                `;
-            });
+                // Remove existing event listeners to avoid duplicates
+                audioPlayer.removeEventListener('error', handleAudioError);
+                audioPlayer.removeEventListener('loadeddata', handleAudioSuccess);
 
-            // Add success handler
-            audioPlayer.addEventListener('loadeddata', function () {
-                console.log('Audio file loaded successfully');
-                status.innerHTML = `
-                    <span class="text-green-600">
-                        <i class="fas fa-check-circle mr-1"></i>
-                        Audio file loaded successfully
-                    </span>
-                `;
-            });
+                // Add new event listeners
+                audioPlayer.addEventListener('error', handleAudioError);
+                audioPlayer.addEventListener('loadeddata', handleAudioSuccess);
+
+                audioPlayer.load();
+                playerContainer.classList.remove('hidden');
+                console.log('✅ Audio player setup complete, player should be visible now');
+            }
+
+            // Error handler function
+            function handleAudioError(e) {
+                console.error('❌ Audio player error:', e);
+                if (status) {
+                    status.innerHTML = `
+                        <span class="text-red-600">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Error loading audio file. File may be corrupted or unsupported.
+                        </span>
+                    `;
+                }
+            }
+
+            // Success handler function  
+            function handleAudioSuccess() {
+                console.log('✅ Audio file loaded successfully in player');
+                if (status) {
+                    if (uploadResult && uploadResult.success) {
+                        status.innerHTML = `
+                            <span class="text-green-600">
+                                <i class="fas fa-play-circle mr-1"></i>
+                                ✅ Ready to play! Audio saved as: ${uploadResult.saved_filename}
+                            </span>
+                        `;
+                    } else {
+                        status.innerHTML = `
+                            <span class="text-green-600">
+                                <i class="fas fa-play-circle mr-1"></i>
+                                Audio file loaded successfully - ready to play!
+                            </span>
+                        `;
+                    }
+                }
+            }
         }
 
         function removeAudio() {
@@ -2081,15 +2110,16 @@ Your video is ready for download!
             selectedAudio = null;
             console.log('Global variables cleared');
 
-            // Clear input values
-            const audioInput = document.getElementById('audioFileInput');
-            if (audioInput) {
-                audioInput.value = '';
+            // Clear input values (audioFileInput removed from main form)
+
+            const audioFileUploadMain = document.getElementById('audioFileUploadMain');
+            if (audioFileUploadMain) {
+                audioFileUploadMain.value = '';
             }
 
-            const audioFileUpload = document.getElementById('audioFileUpload');
-            if (audioFileUpload) {
-                audioFileUpload.value = '';
+            const audioFileUploadSelection = document.getElementById('audioFileUploadSelection');
+            if (audioFileUploadSelection) {
+                audioFileUploadSelection.value = '';
             }
 
             // Hide all preview sections
@@ -2148,75 +2178,7 @@ Your video is ready for download!
             console.log('Audio removal completed');
         }
 
-        function removeMainAudio() {
-            console.log('Removing main audio...');
-
-            // Clear global variables
-            uploadedAudioFile = null;
-            selectedAudio = null;
-            console.log('Global variables cleared');
-
-            // Clear input values
-            const audioInput = document.getElementById('audioFileInput');
-            if (audioInput) {
-                audioInput.value = '';
-            }
-
-            const audioFileUpload = document.getElementById('audioFileUpload');
-            if (audioFileUpload) {
-                audioFileUpload.value = '';
-            }
-
-            // Hide all preview sections
-            const mainPreview = document.getElementById('mainAudioPreview');
-            if (mainPreview) {
-                mainPreview.classList.add('hidden');
-            }
-
-            const uploadedAudioInfo = document.getElementById('uploadedAudioInfo');
-            if (uploadedAudioInfo) {
-                uploadedAudioInfo.classList.add('hidden');
-            }
-
-            // Update selectedAudioName display
-            const selectedAudioName = document.getElementById('selectedAudioName');
-            if (selectedAudioName) {
-                selectedAudioName.textContent = 'No audio selected';
-            }
-
-            // Update buttons
-            updateAudioButtons(false);
-
-            // Clean up audio player
-            const audioPlayerContainer = document.getElementById('audioPlayerContainer');
-            const audioPlayer = document.getElementById('audioPlayer');
-            const audioSource = document.getElementById('audioSource');
-
-            if (audioSource && audioSource.src && audioSource.src.startsWith('blob:')) {
-                URL.revokeObjectURL(audioSource.src);
-                audioSource.src = '';
-                if (audioPlayer) {
-                    audioPlayer.load();
-                }
-            }
-
-            if (audioPlayerContainer) {
-                audioPlayerContainer.classList.add('hidden');
-            }
-
-            // Update audio status
-            const audioStatus = document.getElementById('audioStatus');
-            if (audioStatus) {
-                audioStatus.innerHTML = `
-                    <span class="text-orange-600">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>
-                        Please upload an audio file to continue
-                    </span>
-                `;
-            }
-
-            console.log('Main audio removal completed');
-        }
+        // removeMainAudio function removed since main audio input was removed
 
         // Update Selected Section
         function updateSelectedSection() {
@@ -2313,11 +2275,11 @@ Your video is ready for download!
                 // Add audio file (required)
                 if (selectedAudio && selectedAudio.file) {
                     formData.append('audio_file', selectedAudio.file);
-                    console.log('Adding custom audio:', selectedAudio.name);
+                    console.log('Adding custom audio:', selectedAudio.name, 'Size:', selectedAudio.file.size);
                 } else {
                     alert('Please upload an audio file before creating the video.');
                     createBtn.disabled = false;
-                    createBtn.innerHTML = 'Create Video';
+                    createBtn.innerHTML = '<i class="fas fa-video mr-2"></i>Create TikTok Video';
                     return;
                 }
 
@@ -2355,6 +2317,131 @@ Your video is ready for download!
                 createBtn.innerHTML = '<i class="fas fa-video mr-2"></i>Create TikTok Video';
             }
         });
+
+        // Quiet Audio Upload Test Function (used internally)
+        async function testAudioUploadQuiet(file) {
+            console.log('🧪 Testing audio upload to backend...');
+
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('audio_file', file);
+
+                console.log('🧪 Uploading to backend:', file.name, `(${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+
+                // Send to test endpoint with shorter timeout for quick validation
+                const response = await axios.post(`${API_BASE_URL}/test-audio-upload`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    timeout: 30000, // 30 seconds
+                    onUploadProgress: (progressEvent) => {
+                        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        console.log(`📤 Upload progress: ${percent}%`);
+                    }
+                });
+
+                console.log('✅ Backend upload successful:', response.data);
+
+                // Verify file was saved and is accessible
+                if (response.data.audio_url) {
+                    console.log('🎵 Audio saved to backend:', response.data.audio_url);
+                    console.log('📁 File path on server:', response.data.file_path);
+                    console.log('💾 Saved filename:', response.data.saved_filename);
+                }
+
+                return response.data;
+
+            } catch (error) {
+                console.error('❌ Backend upload failed:', error);
+                if (error.response) {
+                    console.error('Response status:', error.response.status);
+                    console.error('Response data:', error.response.data);
+                }
+                throw new Error(`Upload failed: ${error.response?.data?.detail || error.message}`);
+            }
+        }
+
+        // Test Audio Upload Function
+        async function testAudioUpload() {
+            console.log('Testing audio upload functionality...');
+
+            // Check if user has selected an audio file
+            if (!selectedAudio || !selectedAudio.file) {
+                alert('Please select an audio file first using one of the upload buttons above.');
+                return;
+            }
+
+            try {
+                // Show loading state
+                const loadingMessage = document.createElement('div');
+                loadingMessage.id = 'testLoadingMessage';
+                loadingMessage.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                loadingMessage.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testing audio upload...';
+                document.body.appendChild(loadingMessage);
+
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('audio_file', selectedAudio.file);
+
+                console.log('Sending audio file to test endpoint:', selectedAudio.name);
+
+                // Send to test endpoint
+                const response = await axios.post(`${API_BASE_URL}/test-audio-upload`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    timeout: 30000 // 30 seconds
+                });
+
+                console.log('Test upload response:', response.data);
+
+                // Remove loading message
+                document.body.removeChild(loadingMessage);
+
+                if (response.data.success) {
+                    // Show success message with details
+                    const details = response.data;
+                    const successMsg = `
+🎉 Audio Upload Test Successful! 🎉
+
+📁 File Details:
+• Original: ${details.original_filename}
+• Saved as: ${details.saved_filename}
+• Size: ${details.file_size_mb} MB
+• Processing time: ${details.processing_time}s
+
+✅ Validation Results:
+• Format: ${details.validation.format}
+• Needs conversion: ${details.validation.needs_conversion ? 'Yes' : 'No'}
+• Duration: ${details.validation.duration_seconds ? details.validation.duration_seconds.toFixed(1) + 's' : 'Unknown'}
+
+🔗 Audio URL: ${details.audio_url}
+
+Your audio file has been successfully uploaded and is ready for video generation!
+                    `;
+
+                    alert(successMsg);
+                    console.log('Audio test upload completed successfully');
+                } else {
+                    throw new Error('Test upload failed');
+                }
+
+            } catch (error) {
+                console.error('Test audio upload error:', error);
+
+                // Remove loading message if it exists
+                const loadingMessage = document.getElementById('testLoadingMessage');
+                if (loadingMessage) {
+                    document.body.removeChild(loadingMessage);
+                }
+
+                let errorMessage = 'Audio upload test failed';
+                if (error.response?.data?.detail) {
+                    errorMessage = error.response.data.detail;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                alert(`❌ Audio Upload Test Failed\n\n${errorMessage}\n\nPlease check the console for more details.`);
+            }
+        }
 
         // Update the chooseImage function to call updateSelectedSection
         function chooseImage(card) {

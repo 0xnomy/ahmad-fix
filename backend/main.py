@@ -42,6 +42,14 @@ logging.basicConfig(
 # Create logger
 logger = logging.getLogger(__name__)
 
+# Define consistent directory paths
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent   # app/..
+UPLOADS_DIR = BASE_DIR / "uploads"
+GENERATED_DIR = BASE_DIR / "generated"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+GENERATED_DIR.mkdir(parents=True, exist_ok=True)
+
 app = FastAPI(
     title="TikTok Aging App API", 
     version="1.0.0",
@@ -91,21 +99,115 @@ app.add_middleware(
 # CORS middleware - Updated for separate frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Frontend running on port 3000
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5500", "http://127.0.0.1:5500"],  # Frontend running on ports 3000 and 5500
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Mount static files for generated videos and images
-app.mount("/generated", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../generated")), name="generated")
-app.mount("/images", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../generated")), name="images")
-app.mount("/uploads", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../uploads")), name="uploads")
+app.mount("/generated", StaticFiles(directory=GENERATED_DIR), name="generated")
+app.mount("/images", StaticFiles(directory=GENERATED_DIR), name="images")
+app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 # Initialize services
 openai_service = OpenAIService()
 remotion_service = RemotionService()
 audio_processor = AudioProcessor()
+
+async def process_audio_upload(
+    audio_file: UploadFile,
+    file_prefix: str = "audio",
+    require_audio: bool = False,
+    validate_and_convert: bool = True
+) -> Optional[str]:
+    """
+    Unified audio processing function for all endpoints
+
+    Args:
+        audio_file: The uploaded audio file
+        file_prefix: Prefix for the filename
+        require_audio: If True, raises exception when no audio provided
+        validate_and_convert: If True, validates and converts audio format
+
+    Returns:
+        Path to the processed audio file or None if no valid audio
+    """
+    if not audio_file or not audio_file.filename or audio_file.filename == 'dummy.mp3':
+        if require_audio:
+            raise HTTPException(
+                status_code=400,
+                detail="No audio file provided. Please upload an audio file to create a video with sound."
+            )
+        return None
+
+    # Read content to check if file is empty
+    content = await audio_file.read()
+    if not content:
+        if require_audio:
+            raise HTTPException(status_code=400, detail="Audio file is empty")
+        return None
+
+    timestamp = int(time.time())
+    original_filename = f"{file_prefix}_{timestamp}_{audio_file.filename}"
+
+    # Use consistent uploads directory
+    temp_audio_path = UPLOADS_DIR / original_filename
+
+    try:
+        # Save uploaded file
+        logger.info(f"Saving audio file: {original_filename}")
+        with open(temp_audio_path, "wb") as buffer:
+            buffer.write(content)
+
+        temp_audio_path_str = str(temp_audio_path)
+        logger.info(f"Audio file saved to: {temp_audio_path_str}")
+
+        # Skip validation and conversion if not required
+        if not validate_and_convert:
+            logger.info(f"Audio processing completed (no validation): {temp_audio_path_str}")
+            return temp_audio_path_str
+
+        # Validate audio file
+        validation = audio_processor.validate_audio(temp_audio_path_str)
+        logger.info(f"Audio validation result: {validation}")
+
+        if not validation['valid']:
+            # Clean up invalid file
+            if os.path.exists(temp_audio_path_str):
+                os.remove(temp_audio_path_str)
+            raise HTTPException(status_code=400, detail=f"Invalid audio file: {validation['error']}")
+
+        # Convert to MP3 if needed
+        final_audio_path = temp_audio_path_str
+        if validation.get('needs_conversion', False):
+            logger.info(f"Converting audio to MP3...")
+            converted_filename = f"converted_{file_prefix}_{timestamp}.mp3"
+            converted_path = audio_processor.convert_to_mp3(temp_audio_path_str, converted_filename)
+
+            if converted_path:
+                final_audio_path = converted_path
+                # Clean up original file
+                if os.path.exists(temp_audio_path_str):
+                    os.remove(temp_audio_path_str)
+                logger.info(f"Audio converted successfully to: {final_audio_path}")
+            else:
+                logger.warning(f"Audio conversion failed, using original file")
+
+        logger.info(f"Audio processing completed: {final_audio_path}")
+        return final_audio_path
+
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        # Clean up any files on error
+        if 'temp_audio_path_str' in locals() and os.path.exists(temp_audio_path_str):
+            os.remove(temp_audio_path_str)
+        if 'final_audio_path' in locals() and final_audio_path != temp_audio_path_str and os.path.exists(final_audio_path):
+            os.remove(final_audio_path)
+        logger.error(f"Audio processing failed: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Audio processing failed: {str(e)}")
 
 @app.get("/status")
 async def status_check():
@@ -160,32 +262,14 @@ async def dynamic_aging_video(
         
         logger.info(f"[{dynamic_id}] Generated {len(successful_images)}/{num_images} images successfully")
         
-        # STEP 2: Handle audio processing
-        audio_path = None
-        if audio_file and audio_file.filename != 'dummy.mp3' and audio_file.size > 0:
-            timestamp = int(time.time())
-            audio_filename = f"dynamic_audio_{timestamp}_{audio_file.filename}"
-            
-            # Use project root uploads directory (consistent with static file mounting)
-            project_root = Path(__file__).parent.parent
-            uploads_dir = project_root / "uploads"
-            uploads_dir.mkdir(exist_ok=True)
-            audio_path = uploads_dir / audio_filename
-            
-            with open(audio_path, "wb") as buffer:
-                content = await audio_file.read()
-                buffer.write(content)
-            
-            audio_path = str(audio_path)  # Convert to string for compatibility
-            
-            # Validate audio
-            validation = audio_processor.validate_audio(audio_path)
-            if not validation['valid']:
-                os.remove(audio_path)
-                logger.warning(f"[{dynamic_id}] Invalid audio file, proceeding without: {validation['error']}")
-                audio_path = None
-            else:
-                logger.info(f"[{dynamic_id}] Audio uploaded and validated: {audio_filename}")
+        # STEP 2: Handle audio processing with unified function
+        logger.info(f"[{dynamic_id}] Processing audio file...")
+        audio_path = await process_audio_upload(audio_file, f"dynamic_{dynamic_id}")
+        
+        if audio_path:
+            logger.info(f"[{dynamic_id}] Audio ready: {audio_path}")
+        else:
+            logger.info(f"[{dynamic_id}] No audio provided, will proceed without audio")
         
         # STEP 3: Render video with dynamic timing
         logger.info(f"[{dynamic_id}] STEP 2: Rendering video with dynamic timing...")
@@ -469,61 +553,18 @@ async def render_aging_video(
         
         logger.info(f"[{render_id}] Rendering video with {len(images)} images")
         
-        # Handle audio file with processing and validation
-        audio_path = None
-        if audio_file and audio_file.filename != 'dummy.mp3':
-            timestamp = int(time.time())
-            original_filename = f"audio_{timestamp}_{audio_file.filename}"
-            
-            # Use project root uploads directory (consistent with static file mounting)
-            project_root = Path(__file__).parent.parent
-            uploads_dir = project_root / "uploads"
-            uploads_dir.mkdir(exist_ok=True)
-            temp_audio_path = uploads_dir / original_filename
-            
-            # Save uploaded file
-            with open(temp_audio_path, "wb") as buffer:
-                content = await audio_file.read()
-                buffer.write(content)
-            
-            temp_audio_path = str(temp_audio_path)  # Convert to string for compatibility
-            logger.info(f"[{render_id}] Audio uploaded: {temp_audio_path}")
-            
-            try:
-                # Validate audio file
-                validation = audio_processor.validate_audio(temp_audio_path)
-                if not validation['valid']:
-                    os.remove(temp_audio_path)  # Clean up
-                    raise HTTPException(status_code=400, detail=f"Invalid audio file: {validation['error']}")
-                
-                logger.info(f"[{render_id}] Audio validation passed: {validation}")
-                
-                # Convert to MP3 if needed
-                if validation.get('needs_conversion', False):
-                    logger.info(f"[{render_id}] Converting audio to MP3...")
-                    converted_path = audio_processor.convert_to_mp3(temp_audio_path, f"converted_{timestamp}.mp3")
-                    audio_path = converted_path
-                    os.remove(temp_audio_path)  # Clean up original
-                    logger.info(f"[{render_id}] Audio converted successfully")
-                else:
-                    audio_path = temp_audio_path
-                    logger.info(f"[{render_id}] Using original MP3 audio")
-                    
-            except Exception as e:
-                logger.error(f"[{render_id}] Audio processing failed: {str(e)}")
-                if os.path.exists(temp_audio_path):
-                    os.remove(temp_audio_path)
-                raise HTTPException(status_code=400, detail=f"Audio processing failed: {str(e)}")
-            
-            print(f"🎵 Audio processed: {audio_path}")
+        # Handle audio file with unified processing
+        logger.info(f"[{render_id}] Processing audio file...")
+        audio_path = await process_audio_upload(audio_file, f"render_{render_id}")
         
-        # Use default audio if none provided
+        # Require audio file for video generation
         if not audio_path:
-            # User requested to remove default audio - raise error if no audio provided
             raise HTTPException(
                 status_code=400, 
                 detail="No audio file provided. Please upload an audio file to create a video with sound."
             )
+        
+        logger.info(f"[{render_id}] Audio ready: {audio_path}")
         
         # Render video using Remotion with dynamic timing
         print("🎬 Starting video rendering with Remotion...")
@@ -621,77 +662,85 @@ async def complete_aging_pipeline(
         if len(images) < 2:
             raise HTTPException(status_code=400, detail="At least 2 successful images required for video")
         
-        # Step 3: Handle audio file
-        audio_path = None
-        if audio_file and audio_file.filename != 'dummy.mp3' and audio_file.size > 0:
-            timestamp = int(time.time())
-            audio_filename = f"pipeline_audio_{timestamp}_{audio_file.filename}"
-            
-            # Use project root uploads directory (consistent with static file mounting)
-            project_root = Path(__file__).parent.parent
-            uploads_dir = project_root / "uploads"
-            uploads_dir.mkdir(exist_ok=True)
-            audio_path = uploads_dir / audio_filename
-            
-            with open(audio_path, "wb") as buffer:
-                content = await audio_file.read()
-                buffer.write(content)
-            
-            logger.info(f"[{pipeline_id}] Custom audio uploaded: {audio_filename}")
-            audio_path = str(audio_path)  # Convert to string for compatibility
+        # Step 3: Handle audio file with unified processing (optional for complete pipeline)
+        logger.info(f"[{pipeline_id}] Processing audio file...")
+        audio_path = await process_audio_upload(audio_file, f"pipeline_{pipeline_id}")
         
-        # Use default audio if none provided
-        if not audio_path:
-            # User requested to remove default audio - raise error if no audio provided
-            raise HTTPException(
-                status_code=400, 
-                detail="No audio file provided. Please upload an audio file to create a video with sound."
-            )
+        if audio_path:
+            logger.info(f"[{pipeline_id}] Audio ready: {audio_path}")
+        else:
+            logger.info(f"[{pipeline_id}] No audio provided - complete pipeline will return images for manual workflow")
         
-        # Step 4: Render video using Remotion with dynamic timing
-        logger.info(f"[{pipeline_id}] Step 2: Rendering video with {len(images)} images...")
-        
-        # Calculate dynamic timing: 2 seconds per image
-        duration_per_image = 2.0
-        transition_duration = 0.5
-        
-        video_path = await remotion_service.render_video(
-            images, 
-            audio_path, 
-            title, 
-            name,
-            duration_per_image=duration_per_image,
-            transition_duration=transition_duration,
-            text_transition_duration=1.0
-        )
-        
-        # Step 5: Calculate total time and return results
+        # Step 4: Render video only if audio is provided, otherwise return images for manual workflow
         total_time = time.time() - start_time
         
-        logger.info(f"[{pipeline_id}] Pipeline completed successfully in {total_time:.1f}s")
-        
-        response = {
-            "success": True,
-            "pipeline_id": pipeline_id,
-            "total_time": total_time,
-            "image_generation_time": 0,  # TODO: Track image generation time separately
-            "video_rendering_time": total_time,
-            "images_generated": len(images),
-            "video_url": f"/generated/{os.path.basename(video_path)}",
-            "video_path": video_path,
-            "title": title,
-            "name": name,
-            "prompt": prompt,
-            "images": [
-                {
-                    "url": f"/images/{img.url}",
-                    "age": img.age,
-                    "year": img.year,
-                    "caption": img.caption
-                }
-                for img in images
-            ]
-        }
+        if audio_path:
+            # Render video with audio
+            logger.info(f"[{pipeline_id}] Step 2: Rendering video with {len(images)} images and audio...")
+            
+            # Calculate dynamic timing: 2 seconds per image
+            duration_per_image = 2.0
+            transition_duration = 0.5
+            
+            video_path = await remotion_service.render_video(
+                images, 
+                audio_path, 
+                title, 
+                name,
+                duration_per_image=duration_per_image,
+                transition_duration=transition_duration,
+                text_transition_duration=1.0
+            )
+            
+            logger.info(f"[{pipeline_id}] Complete pipeline with video completed in {total_time:.1f}s")
+            
+            response = {
+                "success": True,
+                "pipeline_id": pipeline_id,
+                "total_time": total_time,
+                "image_generation_time": 0,  # TODO: Track image generation time separately
+                "video_rendering_time": total_time,
+                "images_generated": len(images),
+                "video_url": f"/generated/{os.path.basename(video_path)}",
+                "video_path": video_path,
+                "title": title,
+                "name": name,
+                "prompt": prompt,
+                "images": [
+                    {
+                        "url": f"/images/{img.url}",
+                        "age": img.age,
+                        "year": img.year,
+                        "caption": img.caption
+                    }
+                    for img in images
+                ]
+            }
+        else:
+            # Return images only for manual workflow
+            logger.info(f"[{pipeline_id}] Image generation completed in {total_time:.1f}s - returning images for manual workflow")
+            
+            response = {
+                "success": True,
+                "pipeline_id": pipeline_id,
+                "total_time": total_time,
+                "image_generation_time": total_time,
+                "images_generated": len(images),
+                "title": title,
+                "name": name,
+                "prompt": prompt,
+                "workflow": "images_only",
+                "message": "Images generated successfully. Please proceed to select your favorites and add audio.",
+                "images": [
+                    {
+                        "url": f"/images/{img.url}",
+                        "age": img.age,
+                        "year": img.year,
+                        "caption": img.caption
+                    }
+                    for img in images
+                ]
+            }
         
         return response
         
@@ -736,31 +785,13 @@ async def generate_and_render_video(
         
         print(f"✅ Step 1 Complete: Generated {len(successful_images)} successful images")
         
-        # Step 2: Handle audio
-        audio_path = None
-        if audio_file and audio_file.filename != 'dummy.mp3':
-            timestamp = int(time.time())
-            audio_filename = f"audio_{timestamp}_{audio_file.filename}"
-            
-            # Use project root uploads directory (consistent with static file mounting)
-            project_root = Path(__file__).parent.parent
-            uploads_dir = project_root / "uploads"
-            uploads_dir.mkdir(exist_ok=True)
-            audio_path = uploads_dir / audio_filename
-            
-            with open(audio_path, "wb") as buffer:
-                content = await audio_file.read()
-                buffer.write(content)
-            
-            audio_path = str(audio_path)  # Convert to string for compatibility
-            
-            print(f"🎵 Audio uploaded: {audio_path}")
-        else:
-            # User requested to remove default audio - require audio file
-            raise HTTPException(
-                status_code=400, 
-                detail="No audio file provided. Please upload an audio file to create a video with sound."
-            )
+        # Step 2: Handle audio using unified function
+        audio_path = await process_audio_upload(
+            audio_file,
+            f"render_{str(uuid.uuid4())[:8]}",
+            require_audio=True,
+            validate_and_convert=False  # Skip validation for this endpoint to maintain original behavior
+        )
         
         # Step 3: Render video with dynamic timing
         print("🎬 Step 2: Rendering video with Remotion...")
@@ -848,59 +879,19 @@ async def generate_video(
         if len(accepted_images) < 2:
             raise HTTPException(status_code=400, detail="At least 2 images required for video generation")
 
-        # Handle audio file (now optional)
-        audio_path = None
+        # Handle audio file using unified function
+        audio_path = await process_audio_upload(
+            audio_file,
+            f"generate_{uuid.uuid4().hex[:8]}",
+            require_audio=False,
+            validate_and_convert=True
+        )
+
+        # Extract filename for response
         audio_filename = ""
-        if audio_file and audio_file.filename:
-            print(f"Processing audio file: {audio_file.filename}, size: {getattr(audio_file, 'size', 'unknown')}")
-
-            # Save uploaded audio file temporarily for validation
-            temp_audio_filename = f"temp_{uuid.uuid4().hex[:8]}_{audio_file.filename}"
-            
-            # Use project root uploads directory (consistent with static file mounting)
-            project_root = Path(__file__).parent.parent
-            uploads_dir = project_root / "uploads"
-            uploads_dir.mkdir(exist_ok=True)
-            temp_audio_path = uploads_dir / temp_audio_filename
-
-            with open(temp_audio_path, "wb") as buffer:
-                shutil.copyfileobj(audio_file.file, buffer)
-
-            temp_audio_path = str(temp_audio_path)  # Convert to string for compatibility
-            print(f"Temporary audio file saved: {temp_audio_path}")
-
-            # Validate audio file using AudioProcessor
-            validation = audio_processor.validate_audio(temp_audio_path)
-            print(f"Audio validation result: {validation}")
-
-            if not validation['valid']:
-                os.remove(temp_audio_path)  # Clean up temp file
-                raise HTTPException(status_code=400, detail=f"Invalid audio file: {validation['error']}")
-
-            print(f"Audio validation passed: {validation}")
-
-            # Convert to MP3 if needed
-            if validation['needs_conversion']:
-                print("Converting audio to MP3...")
-                converted_filename = f"converted_{uuid.uuid4().hex[:8]}.mp3"
-                converted_path = audio_processor.convert_to_mp3(temp_audio_path, converted_filename)
-                if converted_path:
-                    audio_path = converted_path
-                    audio_filename = converted_filename
-                    os.remove(temp_audio_path)  # Clean up temp file
-                    print(f"Audio converted successfully: {converted_path}")
-                else:
-                    os.remove(temp_audio_path)  # Clean up temp file
-                    raise HTTPException(status_code=500, detail="Failed to convert audio file")
-            else:
-                # No conversion needed, use original file
-                audio_filename = f"{uuid.uuid4().hex[:8]}_{audio_file.filename}"
-                audio_path = os.path.join("../uploads", audio_filename)
-                os.rename(temp_audio_path, audio_path)
-                print(f"Audio file ready (no conversion needed): {audio_path}")
-
-            print(f"Final audio file: {audio_path}")
-
+        if audio_path:
+            audio_filename = os.path.basename(audio_path)
+            print(f"Audio file processed: {audio_filename}")
         else:
             print("No audio file provided - will use default audio")
 
@@ -987,6 +978,65 @@ async def download_video(filename: str):
         filename=filename,
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+@app.post("/test-audio-upload")
+async def test_audio_upload(
+    audio_file: UploadFile = File(...)
+):
+    """
+    Test endpoint for audio upload functionality
+    Validates and processes audio files, returns detailed information
+    """
+    test_id = str(uuid.uuid4())
+    start_time = time.time()
+    
+    try:
+        logger.info(f"[{test_id}] Testing audio upload: {audio_file.filename}")
+        
+        if not audio_file or not audio_file.filename:
+            raise HTTPException(status_code=400, detail="No audio file provided")
+        
+        # Process audio file using unified function
+        final_audio_path = await process_audio_upload(
+            audio_file,
+            f"test_{test_id}",
+            require_audio=True,
+            validate_and_convert=True
+        )
+        
+        # Get final file info
+        file_size = os.path.getsize(final_audio_path)
+        file_size_mb = file_size / (1024 * 1024)
+
+        # Get validation info for response
+        validation = audio_processor.validate_audio(final_audio_path)
+
+        processing_time = time.time() - start_time
+
+        response = {
+            "success": True,
+            "test_id": test_id,
+            "original_filename": audio_file.filename,
+            "saved_filename": os.path.basename(final_audio_path),
+            "file_path": final_audio_path,
+            "file_size_bytes": file_size,
+            "file_size_mb": round(file_size_mb, 2),
+            "processing_time": round(processing_time, 3),
+            "validation": validation,
+            "audio_url": f"/uploads/{os.path.basename(final_audio_path)}",
+            "message": "Audio file uploaded and processed successfully"
+        }
+        
+        logger.info(f"[{test_id}] Audio upload test completed successfully")
+        return response
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"[{test_id}] Error in test_audio_upload: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Audio upload test failed: {str(e)}")
 
 @app.get("/health")
 async def health_check():

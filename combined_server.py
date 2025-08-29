@@ -42,8 +42,18 @@ def create_combined_app():
     try:
         app.mount("/frontend", StaticFiles(directory=str(frontend_dir)), name="frontend")
         print("✅ Frontend static files mounted at /frontend")
+        print(f"📁 Frontend directory: {frontend_dir.absolute()}")
     except Exception as e:
         print(f"❌ Error mounting frontend static files: {e}")
+        print(f"Expected frontend directory: {frontend_dir.absolute()}")
+        
+    # Also mount the debug test file
+    try:
+        debug_file = Path(__file__).parent / "test_audio_debug.html"
+        if debug_file.exists():
+            print(f"✅ Debug test file available at /debug-audio")
+    except Exception as e:
+        print(f"Note: Debug test file not available: {e}")
 
     # Add root route to serve index.html
     @app.get("/")
@@ -65,6 +75,15 @@ def create_combined_app():
             return FileResponse(str(index_path), media_type='text/html')
         else:
             return {"error": "Frontend not found"}
+
+    # Add route to serve debug test file
+    @app.get("/debug-audio")
+    async def serve_debug_audio():
+        debug_path = Path(__file__).parent / "test_audio_debug.html"
+        if debug_path.exists():
+            return FileResponse(str(debug_path), media_type='text/html')
+        else:
+            return {"error": "Debug test file not found"}
 
     print("✅ Frontend routes configured")
     return app

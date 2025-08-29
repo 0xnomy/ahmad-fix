@@ -6,9 +6,15 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Define consistent directory paths (matching main.py)
+AUDIO_BASE = Path(__file__).resolve().parent.parent.parent   # backend/..
+UPLOADS_DIR = AUDIO_BASE / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
 class AudioProcessor:    
     def __init__(self):
-        self.supported_formats = ['.mp3', '.wav', '.m4a', '.aac']
+        self.supported_formats = ['.mp3', '.wav', '.m4a', '.aac', '.ogg']
+        self.max_file_size = 50 * 1024 * 1024  # 50MB
     
     def validate_audio(self, file_path: str) -> Dict[str, any]:
         try:
@@ -31,18 +37,31 @@ class AudioProcessor:
             
             # Check file size (max 50MB)
             file_size = os.path.getsize(file_path)
-            if file_size > 50 * 1024 * 1024:  # 50MB
-                return {'valid': False, 'error': 'File too large (max 50MB)'}
+            if file_size > self.max_file_size:
+                return {'valid': False, 'error': f'File too large (max {self.max_file_size // (1024 * 1024)}MB)'}
             
             if file_size == 0:
                 return {'valid': False, 'error': 'File is empty'}
+            
+            # Try to get basic audio info using ffprobe if available
+            duration = None
+            try:
+                import subprocess
+                cmd = ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', file_path]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                if result.returncode == 0:
+                    duration = float(result.stdout.strip())
+            except (subprocess.TimeoutExpired, subprocess.CalledProcessError, FileNotFoundError, ValueError):
+                logger.debug(f"Could not get duration for {file_path} - ffprobe not available or failed")
             
             # Basic validation passed
             validation_result = {
                 'valid': True,
                 'format': file_ext,
-                'size_mb': file_size / (1024 * 1024),
-                'needs_conversion': file_ext != '.mp3'
+                'size_mb': round(file_size / (1024 * 1024), 2),
+                'size_bytes': file_size,
+                'needs_conversion': file_ext != '.mp3',
+                'duration_seconds': duration
             }
             
             logger.info(f"Audio validation passed: {validation_result}")
@@ -54,12 +73,8 @@ class AudioProcessor:
     
     def convert_to_mp3(self, input_path: str, output_filename: str) -> Optional[str]:
         try:
-            # Ensure uploads directory exists with absolute path
-            backend_dir = Path(__file__).parent.parent.parent
-            uploads_dir = backend_dir / "uploads"
-            uploads_dir.mkdir(exist_ok=True)
-            
-            output_path = uploads_dir / output_filename
+            # Use consistent uploads directory
+            output_path = UPLOADS_DIR / output_filename
             
             # Check if input file exists and is readable
             input_file = Path(input_path)
@@ -107,9 +122,7 @@ class AudioProcessor:
             # Try to copy the file instead
             try:
                 import shutil
-                backend_dir = Path(__file__).parent.parent.parent
-                uploads_dir = backend_dir / "uploads"
-                output_path = uploads_dir / output_filename
+                output_path = UPLOADS_DIR / output_filename
                 shutil.copy2(input_path, output_path)
                 return str(output_path)
             except Exception as e:
@@ -120,9 +133,7 @@ class AudioProcessor:
             logger.warning("ffmpeg not found, copying file without conversion")
             try:
                 import shutil
-                backend_dir = Path(__file__).parent.parent.parent
-                uploads_dir = backend_dir / "uploads"
-                output_path = uploads_dir / output_filename
+                output_path = UPLOADS_DIR / output_filename
                 shutil.copy2(input_path, output_path)
                 return str(output_path)
             except Exception as e:
@@ -133,9 +144,7 @@ class AudioProcessor:
             # Try to copy the file as a last resort
             try:
                 import shutil
-                backend_dir = Path(__file__).parent.parent.parent
-                uploads_dir = backend_dir / "uploads"
-                output_path = uploads_dir / output_filename
+                output_path = UPLOADS_DIR / output_filename
                 shutil.copy2(input_path, output_path)
                 return str(output_path)
             except Exception as copy_error:

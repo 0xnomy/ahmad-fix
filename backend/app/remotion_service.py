@@ -13,13 +13,27 @@ import sys
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Use the same directory constants as main.py
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent   # backend/..
+GENERATED_DIR = BASE_DIR / "generated"
+UPLOADS_DIR = BASE_DIR / "uploads"
+
 class RemotionService:
     def __init__(self):
         self.project_path = os.getenv("REMOTION_PROJECT_PATH", "../")
         self.project_path = os.path.abspath(self.project_path)
-        self.public_images_path = os.path.join(self.project_path, "generated")
+        self.generated_dir = GENERATED_DIR
         # Ensure directories exist
-        os.makedirs(self.public_images_path, exist_ok=True)
+        self.generated_dir.mkdir(parents=True, exist_ok=True)
+
+        # Debug logging
+        logger.info(f"RemotionService initialized:")
+        logger.info(f"  BASE_DIR: {BASE_DIR}")
+        logger.info(f"  GENERATED_DIR: {GENERATED_DIR}")
+        logger.info(f"  UPLOADS_DIR: {UPLOADS_DIR}")
+        logger.info(f"  self.generated_dir: {self.generated_dir}")
+        logger.info(f"  project_path: {self.project_path}")
         
     def _extract_filename_from_url(self, url: str) -> str:
         """Extract filename from URL like http://localhost:8000/images/aged_40_1756232627.png"""
@@ -33,28 +47,28 @@ class RemotionService:
     def _copy_images_to_public(self, images: List[GeneratedImage]) -> List[dict]:
         """Copy generated images to public/images directory and return proper data structure"""
         copied_images = []
-        
+
         # Ensure public/images directory exists
         public_images_dir = os.path.join(self.project_path, "public", "images")
         os.makedirs(public_images_dir, exist_ok=True)
-        
+
         for img in images:
             if not img.url:
                 continue
-                
+
             try:
                 # Extract filename from URL
                 filename = self._extract_filename_from_url(img.url)
-                
-                # Source path (in generated/)
-                source_path = os.path.join(self.public_images_path, filename)
-                
+
+                # Source path (in generated/ - using unified path)
+                source_path = self.generated_dir / filename
+
                 # Destination path (in public/images/)
                 dest_path = os.path.join(public_images_dir, filename)
 
-                if os.path.exists(source_path):
+                if source_path.exists():
                     # Copy image to public/images/
-                    shutil.copy2(source_path, dest_path)
+                    shutil.copy2(str(source_path), dest_path)
                     logger.info(f"Image copied: {filename}")
 
                     # Create proper data structure for Remotion (matching aged-reel-data.ts)
@@ -66,11 +80,11 @@ class RemotionService:
                     copied_images.append(photo_data)
                 else:
                     logger.warning(f"Image not found: {source_path}")
-                    
+
             except Exception as e:
                 logger.error(f"Error processing image {img.url}: {e}")
                 continue
-                
+
         return copied_images
 
     async def render_video(self, images: List[GeneratedImage], audio_file: str, title: str, name: str, duration_per_image: float = 2.0, transition_duration: float = 0.5, text_transition_duration: float = 1.0) -> str:

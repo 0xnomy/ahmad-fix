@@ -25,3 +25,5 @@ images/
 *.mp3
 generated/
 test_video_generation.py
+test_audio_upload.py
+test_complete_workflow.py

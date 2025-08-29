@@ -271,20 +271,20 @@ class OpenAIService:
         try:
             from pathlib import Path
             image_bytes = base64.b64decode(base64_data)
-            
-            # Use absolute path to generated directory
-            backend_dir = Path(__file__).parent.parent.parent
-            generated_dir = backend_dir / "generated"
-            generated_dir.mkdir(exist_ok=True)
-            
-            file_path = generated_dir / filename
+
+            # Use unified directory constants (same as main.py)
+            BASE_DIR = Path(__file__).resolve().parent.parent.parent   # backend/..
+            GENERATED_DIR = BASE_DIR / "generated"
+            GENERATED_DIR.mkdir(parents=True, exist_ok=True)
+
+            file_path = GENERATED_DIR / filename
             with open(file_path, 'wb') as f:
                 f.write(image_bytes)
-            
+
             logger.info(f"Image saved successfully: {file_path}")
             # Return the full path for frontend access through static mount
             return f"/generated/{filename}"
-            
+
         except Exception as e:
             logger.error(f"Error saving image {filename}: {str(e)}")
             return ""
